@@ -31,6 +31,7 @@ import VersionSelector from "@/components/VersionSelector";
 import SafeItemImage from "@/components/SafeItemImage";
 import CosmicBackground from "@/components/CosmicBackground";
 import ProgressionGuide from "@/components/ProgressionGuide";
+import Minecraft3DCube from "@/components/Minecraft3DCube";
 import { useLanguage } from "@/context/LanguageContext";
 import { useVersion } from "@/context/VersionContext";
 
@@ -202,23 +203,28 @@ export default function HomePage() {
         {/* VIEW 1: LANDING PAGE HERO SECTION                                     */}
         {/* ═══════════════════════════════════════════════════════════════════════ */}
         {currentView === "landing" ? (
-          <main className="max-w-7xl mx-auto px-4 sm:px-6 py-12 sm:py-16 flex-1 w-full flex flex-col justify-center space-y-12">
+          <main className="max-w-7xl mx-auto px-4 sm:px-6 py-10 sm:py-14 flex-1 w-full flex flex-col justify-center space-y-10">
             {/* Cinematic Hero Title Section */}
             <div className="text-center space-y-5 max-w-4xl mx-auto">
+              {/* Interactive Rotating 3D Minecraft Cube */}
+              <div className="flex justify-center mb-1">
+                <Minecraft3DCube size={74} blockType="grass" interactive={true} className="cursor-pointer" />
+              </div>
+
               {/* Floating Glowing Pill */}
-              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-extrabold bg-cyan-500/15 text-cyan-200 border border-cyan-400/40 shadow-[0_0_25px_rgba(56,189,248,0.3)]">
-                <Sparkles size={14} className="text-cyan-300 animate-pulse" />
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-extrabold bg-emerald-500/15 text-emerald-300 border border-emerald-400/40 shadow-[0_0_25px_rgba(34,197,94,0.3)]">
+                <Sparkles size={14} className="text-emerald-300 animate-pulse" />
                 <span>
                   {language === "uz"
-                    ? `MINECRAFT KOSMIK ENSIKLOPEDIYASI · ${currentEditionInfo.labelUz} (${selectedVersion})`
+                    ? `MINECRAFT 3D VOXEL ENSIKLOPEDIYASI · ${currentEditionInfo.labelUz} (${selectedVersion})`
                     : language === "ru"
-                    ? `КОСМИЧЕСКАЯ ЭНЦИКЛОПЕДИЯ MINECRAFT · ${currentEditionInfo.labelRu} (${selectedVersion})`
-                    : `SOOTHING COSMIC COMPENDIUM · ${currentEditionInfo.labelEn} (${selectedVersion})`}
+                    ? `3D ВОКСЕЛЬНАЯ ЭНЦИКЛОПЕДИЯ MINECRAFT · ${currentEditionInfo.labelRu} (${selectedVersion})`
+                    : `AUTHENTIC 3D MINECRAFT COMPENDIUM · ${currentEditionInfo.labelEn} (${selectedVersion})`}
                 </span>
               </div>
 
               {/* Massive Bold Gradient Headline */}
-              <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-sky-100 to-purple-300 tracking-tight leading-none drop-shadow-2xl">
+              <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 via-cyan-100 to-sky-300 tracking-tight leading-none drop-shadow-2xl">
                 {language === "uz"
                   ? "ASOSIY MINECRAFT ENSIKLOPEDIYASI"
                   : language === "ru"
@@ -226,13 +232,13 @@ export default function HomePage() {
                   : "THE ULTIMATE MINECRAFT ARCHIVE"}
               </h1>
 
-              {/* Soothing, Welcoming Subtitle */}
+              {/* Welcoming Subtitle */}
               <p className="text-slate-200 text-base sm:text-lg leading-relaxed max-w-2xl mx-auto font-normal drop-shadow">
                 {language === "uz"
-                  ? `Minecraft ${selectedVersion} uchun mukammal baza: 3x3 ish stoli retseptlari, yerosti ma'danlari qatlamlari, damlamalar daraxti, o'yinni 100% yutish bo'yicha bosqichma-bosqich qo'llanma va 3D orbital inspeksiya.`
+                  ? `Minecraft ${selectedVersion} uchun mukammal baza: 3x3 ish stoli retseptlari, yerosti ma'danlari qatlamlari, damlamalar daraxti, o'yinni 100% yutish bo'yicha bosqichma-bosqich qo'llanma va aylanuvchi 3D bloklar inspeksiyasi.`
                   : language === "ru"
-                  ? `Расслабляющая интерактивная база для Minecraft ${selectedVersion}: аутентичные рецепты верстака 3x3, гайд по прохождению игры, подземные высоты генерации руд и 3D осмотр блоков.`
-                  : `Explore authentic ${selectedVersion} crafting recipes, full victory walkthrough from Day 1 to the Ender Dragon, underground ore distributions, and pure 3D voxel inspection.`}
+                  ? `Интерактивная база для Minecraft ${selectedVersion}: аутентичные рецепты верстака 3x3, гайд по прохождению игры, подземные высоты генерации руд и 3D осмотр блоков.`
+                  : `Explore authentic ${selectedVersion} crafting recipes, full victory walkthrough from Day 1 to the Ender Dragon, underground ore distributions, and pure 3D rotating voxel inspection.`}
               </p>
 
               {/* Large Premium Glowing Call-To-Action (CTA) Buttons */}

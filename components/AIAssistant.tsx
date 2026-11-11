@@ -22,6 +22,7 @@ import {
   Layers,
 } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
+import Minecraft3DCube from "@/components/Minecraft3DCube";
 
 export type MessageFormatStyle =
   | "standard"
@@ -42,114 +43,6 @@ interface ChatMessage {
   relatedItems?: { name: string; id: string; texture: string }[];
 }
 
-/**
- * 🪐 Custom High-Detail Celestial Ringed Planet Icon
- * Replaces the magic wand button with a luminous cosmic orb matching user's design.
- */
-function CelestialOrbIcon({ size = 26, className = "" }: { size?: number; className?: string }) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 64 64"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      className={`drop-shadow-[0_0_12px_rgba(6,182,212,0.8)] ${className}`}
-    >
-      <defs>
-        {/* Core Planet Radial Gradient */}
-        <radialGradient id="aiOrbCore" cx="38%" cy="32%" r="65%">
-          <stop offset="0%" stopColor="#67e8f9" />
-          <stop offset="35%" stopColor="#38bdf8" />
-          <stop offset="70%" stopColor="#6366f1" />
-          <stop offset="100%" stopColor="#1e1b4b" />
-        </radialGradient>
-
-        {/* Luminous Celestial Ring Gradient */}
-        <linearGradient id="aiOrbRing" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#22d3ee" />
-          <stop offset="45%" stopColor="#a855f7" />
-          <stop offset="80%" stopColor="#ec4899" />
-          <stop offset="100%" stopColor="#38bdf8" />
-        </linearGradient>
-
-        {/* Outer Atmospheric Aura */}
-        <radialGradient id="aiOrbGlow" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stopColor="#06b6d4" stopOpacity="0.75" />
-          <stop offset="60%" stopColor="#8b5cf6" stopOpacity="0.3" />
-          <stop offset="100%" stopColor="#000000" stopOpacity="0" />
-        </radialGradient>
-      </defs>
-
-      {/* Atmospheric Corona */}
-      <circle cx="32" cy="32" r="28" fill="url(#aiOrbGlow)" />
-
-      {/* Back Half of Celestial Ring (Behind the sphere) */}
-      <ellipse
-        cx="32"
-        cy="32"
-        rx="27"
-        ry="8.5"
-        transform="rotate(-28 32 32)"
-        stroke="url(#aiOrbRing)"
-        strokeWidth="3.2"
-        strokeDasharray="95 180"
-        strokeDashoffset="75"
-        strokeLinecap="round"
-        opacity="0.85"
-      />
-
-      {/* Central Planet Sphere */}
-      <circle cx="32" cy="32" r="16.5" fill="url(#aiOrbCore)" />
-
-      {/* Surface Atmosphere Waves */}
-      <path
-        d="M17 31 C 22 27, 40 27, 47 33 C 41 37, 23 37, 17 31 Z"
-        fill="#a5f3fc"
-        opacity="0.25"
-      />
-
-      {/* Front Half of Celestial Ring (In front of the sphere) */}
-      <ellipse
-        cx="32"
-        cy="32"
-        rx="27"
-        ry="8.5"
-        transform="rotate(-28 32 32)"
-        stroke="url(#aiOrbRing)"
-        strokeWidth="3.4"
-        strokeDasharray="95 180"
-        strokeDashoffset="-20"
-        strokeLinecap="round"
-      />
-
-      {/* Inner Thin Neon Ring Accent */}
-      <ellipse
-        cx="32"
-        cy="32"
-        rx="23"
-        ry="6.5"
-        transform="rotate(-28 32 32)"
-        stroke="#e0e7ff"
-        strokeWidth="1.2"
-        strokeDasharray="75 180"
-        strokeDashoffset="-20"
-        opacity="0.9"
-      />
-
-      {/* Sparkling North Star */}
-      <polygon
-        points="48,13 50,18 55,20 50,22 48,27 46,22 41,20 46,18"
-        fill="#ffffff"
-        className="animate-pulse"
-      />
-      {/* Tiny companion glint */}
-      <circle cx="15" cy="46" r="1.8" fill="#38bdf8" />
-      <circle cx="49" cy="47" r="1.3" fill="#c084fc" />
-    </svg>
-  );
-}
-
 export default function AIAssistant() {
   const { language } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
@@ -166,8 +59,8 @@ export default function AIAssistant() {
         id: "m_welcome_uz",
         sender: "ai",
         formatStyle: "tactical",
-        badge: "MINECRAFT WIKI AI",
-        text: "Assalomu alaykum! Men Minecraft Rasmiy Sun'iy Intellekt Yordamchisiman 🪐.\n\nMinecraftning barcha versiyalari (1.0 dan 1.21+ Tricky Trials gacha), qazish qatlamlari, bosslar jangi, damlamalar, qiziltosh mexanikalari, buyruqlar va omon qolish bo'yicha har qanday savolingizni bering!",
+        badge: "MINECRAFT VOXEL AI",
+        text: "Assalomu alaykum! Men Minecraft Rasmiy Voxel Sun'iy Intellekt Yordamchisiman 🧊.\n\nMinecraftning barcha versiyalari (1.0 dan 1.21+ Tricky Trials gacha), qazish qatlamlari, bosslar jangi, damlamalar, qiziltosh mexanikalari, buyruqlar va omon qolish bo'yicha har qanday savolingizni bering!",
         time: "Hozir",
       },
     ],
@@ -176,8 +69,8 @@ export default function AIAssistant() {
         id: "m_welcome_ru",
         sender: "ai",
         formatStyle: "tactical",
-        badge: "MINECRAFT WIKI AI",
-        text: "Привет! Я официальный ИИ-Ассистент Minecraft Wiki 🪐.\n\nЗадавайте любые вопросы по всем версиям Minecraft (от 1.0 до 1.21+), высоте руд, зельеварению, редстоуну, командам и тактике победы над боссами!",
+        badge: "MINECRAFT VOXEL AI",
+        text: "Привет! Я официальный Voxel ИИ-Ассистент Minecraft 🧊.\n\nЗадавайте любые вопросы по всем версиям Minecraft (от 1.0 до 1.21+), высоте руд, зельеварению, редстоуну, командам и тактике победы над боссами!",
         time: "Сейчас",
       },
     ],
@@ -186,8 +79,8 @@ export default function AIAssistant() {
         id: "m_welcome_en",
         sender: "ai",
         formatStyle: "tactical",
-        badge: "MINECRAFT WIKI AI",
-        text: "Greetings! I am the official Minecraft Wiki AI Companion 🪐.\n\nAsk me anything about Minecraft versions 1.0 through 1.21+ Tricky Trials, optimal mining depths, brewing alchemy, redstone machinery, cheats & commands, or speedrun boss tactics!",
+        badge: "MINECRAFT VOXEL AI",
+        text: "Greetings! I am the official Minecraft Voxel AI Companion 🧊.\n\nAsk me anything about Minecraft versions 1.0 through 1.21+ Tricky Trials, optimal mining depths, brewing alchemy, redstone machinery, cheats & commands, or speedrun boss tactics!",
         time: "Just now",
       },
     ],
@@ -305,18 +198,18 @@ export default function AIAssistant() {
       if (language === "uz") {
         text =
           "⛔ **Kechirasiz, men o'zim haqimda shaxsiy, ichki tizim yoki dasturiy kod ma'lumotlarini oshkor qilishim qat'iyan taqiqlangan!**\n\n" +
-          "Men faqat **Minecraft Wiki Rasmiy Sun'iy Intellekt Yordamchisiman** 🪐.\n\n" +
+          "Men faqat **Minecraft Wiki Rasmiy Sun'iy Intellekt Yordamchisiman** 🧊.\n\n" +
           "Mening yagona maqsadim va vazifam — sizga Minecraft olamining barcha sirlari, 1.0 dan 1.21+ gacha barcha yangilanishlar, retseptlar, mexanikalar, buyruqlar va o'yinda g'alaba qozonish sirlari bo'yicha to'liq yordam berishdir.\n\n" +
           "Minecraft bo'yicha xohlagan savolingizni bering — sizga bajonidil javob beraman!";
       } else if (language === "ru") {
         text =
           "⛔ **Извините, раскрывать личную, внутреннюю информацию или системный код обо мне строго запрещено!**\n\n" +
-          "Я — официальный **ИИ-Ассистент Minecraft Wiki** 🪐.\n\n" +
+          "Я — официальный **ИИ-Ассистент Minecraft Wiki** 🧊.\n\n" +
           "Моя единственная задача — помогать вам с крафтом, гайдами, механиками и секретами выживания в Minecraft от 1.0 до 1.21+. Задавайте любые вопросы по игре!";
       } else {
         text =
           "⛔ **I am sorry, disclosing personal, system, or internal code details about myself is strictly prohibited!**\n\n" +
-          "I am the official **Minecraft Wiki AI Companion** 🪐.\n\n" +
+          "I am the official **Minecraft Wiki AI Companion** 🧊.\n\n" +
           "My sole purpose is assisting you with all Minecraft crafting recipes, survival guides, mechanics, commands, and secrets across all versions 1.0 to 1.21+. Ask me anything about Minecraft!";
       }
 
@@ -802,25 +695,22 @@ export default function AIAssistant() {
             </span>
           </div>
 
-          {/* Circular Button: Glowing Cyan ring + Satellite dot + Celestial Ringed Planet */}
+          {/* 3D Minecraft Rotating Cube Trigger Button */}
           <button
             type="button"
             onClick={() => {
               setIsOpen(true);
               setIsMinimized(false);
             }}
-            className="relative w-14 h-14 rounded-full p-1 bg-[#0b1026] border-2 border-cyan-400 hover:border-cyan-300 shadow-[0_0_25px_rgba(6,182,212,0.65)] hover:shadow-[0_0_35px_rgba(168,85,247,0.85)] transition-all duration-300 cursor-pointer flex items-center justify-center group-hover:scale-110 active:scale-95"
-            title={language === "uz" ? "Minecraft AI Yordamchisini ochish" : "Open Minecraft AI Assistant"}
+            className="relative w-16 h-16 rounded-2xl p-1 bg-[#090f1f]/95 border-2 border-emerald-400/80 hover:border-cyan-300 shadow-[0_0_25px_rgba(34,197,94,0.4)] hover:shadow-[0_0_35px_rgba(6,182,212,0.7)] transition-all duration-300 cursor-pointer flex items-center justify-center group-hover:scale-105 active:scale-95"
+            title={language === "uz" ? "Minecraft 3D Voxel AI Yordamchisini ochish" : "Open Minecraft AI Assistant"}
           >
             {/* Satellite pulsing dot on the orbital outer ring */}
-            <div className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-cyan-300 border-2 border-[#080d1e] animate-pulse shadow-[0_0_10px_rgba(6,182,212,1)]" />
+            <div className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-emerald-400 border-2 border-[#080d1e] animate-pulse shadow-[0_0_10px_rgba(34,197,94,1)]" />
 
-            {/* Inner Celestial Orb Icon */}
-            <div className="w-full h-full rounded-full bg-gradient-to-br from-[#0c1a3b] via-[#161f4d] to-[#2e1065] flex items-center justify-center overflow-hidden">
-              <CelestialOrbIcon
-                size={38}
-                className="transform group-hover:rotate-12 transition-transform duration-500"
-              />
+            {/* Inner Live Rotating 3D Minecraft Cube */}
+            <div className="w-full h-full flex items-center justify-center overflow-visible">
+              <Minecraft3DCube size={32} blockType="grass" speedSec={10} shadow={false} />
             </div>
           </button>
         </div>
@@ -836,9 +726,9 @@ export default function AIAssistant() {
           {/* Header */}
           <div className="px-4 py-3 bg-slate-950/90 border-b border-cyan-500/25 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              {/* Mini Celestial Orb Icon in Header */}
-              <div className="w-10 h-10 rounded-full border-2 border-cyan-400/80 p-0.5 bg-gradient-to-br from-[#0c1a3b] to-[#2e1065] flex items-center justify-center shadow-[0_0_14px_rgba(6,182,212,0.6)] flex-shrink-0">
-                <CelestialOrbIcon size={28} />
+              {/* Mini 3D Rotating Cube in Header */}
+              <div className="w-11 h-11 rounded-xl border border-emerald-500/50 bg-[#060a14] flex items-center justify-center flex-shrink-0 shadow-[0_0_15px_rgba(34,197,94,0.35)]">
+                <Minecraft3DCube size={22} blockType="grass" speedSec={12} interactive={false} shadow={false} glow={false} />
               </div>
               <div>
                 <div className="text-xs font-black text-white flex items-center gap-2">
@@ -853,9 +743,9 @@ export default function AIAssistant() {
                     24/7 ONLINE
                   </span>
                 </div>
-                <div className="text-[10px] text-cyan-300 font-mono flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping" />
-                  <span>Minecraft Wiki AI Knowledge Engine</span>
+                <div className="text-[10px] text-emerald-300 font-mono flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+                  <span>Minecraft Voxel AI Core</span>
                 </div>
               </div>
             </div>
