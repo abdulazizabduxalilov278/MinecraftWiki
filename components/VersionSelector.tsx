@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import {
   ChevronDown,
   Check,
@@ -31,20 +32,25 @@ export default function VersionSelector() {
   const [isOpen, setIsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<EditionType>(selectedEdition);
   const [searchQuery, setSearchQuery] = useState("");
+  const [mounted, setMounted] = useState(false);
+
+  // Client-side mounted flag for safe React Portal
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Sync active tab whenever selectedEdition changes
   useEffect(() => {
     setActiveTab(selectedEdition);
   }, [selectedEdition]);
 
-  // Close on ESC
+  // Close on ESC and lock background scroll
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key === "Escape") setIsOpen(false);
     }
     if (isOpen) {
       window.addEventListener("keydown", handleKeyDown);
-      // Prevent background scrolling while version modal is open
       document.body.style.overflow = "hidden";
     } else {
       document.body.style.overflow = "";
@@ -117,9 +123,9 @@ export default function VersionSelector() {
         />
       </button>
 
-      {/* ── 2. MODAL & SOLID OVERLAY (ORQASI MUTLAQO XALAQIT BERMAYDI) ── */}
-      {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
+      {/* ── 2. MODAL RENDERED VIA PORTAL TO BODY (NEVER CLIPPED BY NAVBAR / HEADER) ── */}
+      {isOpen && mounted && typeof document !== "undefined" && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
           {/* Dimmed Dark Backdrop: dims and blurs background hero so nothing clashes */}
           <div
             className="fixed inset-0 bg-black/85 backdrop-blur-md transition-opacity"
@@ -314,7 +320,8 @@ export default function VersionSelector() {
               </span>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );
