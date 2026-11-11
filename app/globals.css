@@ -1,0 +1,171 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --mc-dark: #030712;
+  --cyber-cyan: #06b6d4;
+  --cyber-purple: #a855f7;
+  --cyber-emerald: #10b981;
+}
+
+body {
+  background-color: #030712;
+  color: #f8fafc;
+  font-family: 'Inter', 'Outfit', system-ui, -apple-system, sans-serif;
+  overflow-x: hidden;
+  top: 0px !important;
+}
+
+/* ── Deep Space & Cyber Matrix Ambient Background ── */
+.cyber-space-bg {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 0;
+  pointer-events: none;
+  background-color: #030712;
+  background-image: 
+    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(6, 182, 212, 0.18), transparent 70%),
+    radial-gradient(ellipse 60% 50% at 90% 70%, rgba(168, 85, 247, 0.15), transparent 60%),
+    radial-gradient(ellipse 50% 40% at 10% 80%, rgba(16, 185, 129, 0.12), transparent 50%),
+    radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+  background-size: 100% 100%, 100% 100%, 100% 100%, 32px 32px;
+}
+
+/* Drifting Floating Neon Orbs Animation */
+.cyber-orb-1 {
+  position: fixed;
+  top: 15%;
+  left: 10%;
+  width: 500px;
+  height: 500px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(6, 182, 212, 0.12) 0%, transparent 70%);
+  filter: blur(60px);
+  pointer-events: none;
+  z-index: 1;
+  animation: orb-drift 18s ease-in-out infinite alternate;
+}
+
+.cyber-orb-2 {
+  position: fixed;
+  bottom: 10%;
+  right: 15%;
+  width: 600px;
+  height: 600px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(168, 85, 247, 0.12) 0%, transparent 70%);
+  filter: blur(70px);
+  pointer-events: none;
+  z-index: 1;
+  animation: orb-drift-rev 22s ease-in-out infinite alternate;
+}
+
+@keyframes orb-drift {
+  0% { transform: translate(0px, 0px) scale(1.0); }
+  50% { transform: translate(40px, -30px) scale(1.1); }
+  100% { transform: translate(-30px, 25px) scale(0.95); }
+}
+
+@keyframes orb-drift-rev {
+  0% { transform: translate(0px, 0px) scale(1.0); }
+  50% { transform: translate(-50px, 40px) scale(1.15); }
+  100% { transform: translate(30px, -20px) scale(0.9); }
+}
+
+/* ── Cyber Hosting Frosted Glass Panels ── */
+.glass-panel {
+  background: rgba(11, 15, 25, 0.72);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 
+    0 20px 50px -10px rgba(0, 0, 0, 0.8),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.glass-panel-subtle {
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.5);
+}
+
+.glass-slot {
+  background: rgba(7, 11, 20, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.6);
+}
+
+/* ── Glowing Buttons & Cyber Badges ── */
+.cyber-glow-btn {
+  background: linear-gradient(135deg, rgba(6, 182, 212, 0.25) 0%, rgba(168, 85, 247, 0.25) 100%);
+  border: 1px solid rgba(6, 182, 212, 0.5);
+  box-shadow: 0 0 25px rgba(6, 182, 212, 0.3);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.cyber-glow-btn:hover {
+  border-color: rgba(6, 182, 212, 0.9);
+  box-shadow: 0 0 35px rgba(6, 182, 212, 0.5), 0 0 15px rgba(168, 85, 247, 0.4);
+  transform: translateY(-2px);
+}
+
+/* ── Custom Sleek Scrollbar ── */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(3, 7, 18, 0.95);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(6, 182, 212, 0.5);
+}
+
+/* ── Crisp Pixelated Minecraft Texture Rendering ── */
+.pixelated,
+img.pixelated,
+.mc-texture {
+  image-rendering: -moz-crisp-edges;
+  image-rendering: -webkit-crisp-edges;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+img[src*="mcmeta"],
+img[src*="minecraft/textures"],
+img[src*="githubusercontent"] {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+/* ── Custom Cyber Neon Cursor Active State ── */
+@media (pointer: fine) {
+  body.custom-cursor-active,
+  body.custom-cursor-active a,
+  body.custom-cursor-active button,
+  body.custom-cursor-active input,
+  body.custom-cursor-active select,
+  body.custom-cursor-active textarea,
+  body.custom-cursor-active [role="button"],
+  body.custom-cursor-active .cursor-pointer {
+    cursor: none !important;
+  }
+}
+
+/* ── Subtle Cyber Grid Lines (Matching Screenshot Aesthetic) ── */
+.cyber-grid-overlay {
+  background-size: 48px 48px;
+  background-image: 
+    linear-gradient(to right, rgba(34, 211, 238, 0.035) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(34, 211, 238, 0.035) 1px, transparent 1px);
+}
