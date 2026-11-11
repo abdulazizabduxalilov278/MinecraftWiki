@@ -2,29 +2,152 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import {
-  Wand2,
   Sparkles,
   X,
   Send,
   RotateCcw,
   Bot,
   User,
-  ExternalLink,
-  ChevronRight,
+  ShieldAlert,
+  Terminal,
+  Compass,
   Zap,
   HelpCircle,
   Minimize2,
   Maximize2,
+  Copy,
+  Check,
+  Flame,
+  Award,
+  Layers,
 } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
-import { ITEMS, MinecraftItem } from "@/data/items";
+
+export type MessageFormatStyle =
+  | "standard"
+  | "tactical"
+  | "blueprint"
+  | "forbidden"
+  | "tips"
+  | "terminal";
 
 interface ChatMessage {
   id: string;
   sender: "user" | "ai";
   text: string;
   time: string;
+  formatStyle?: MessageFormatStyle;
+  badge?: string;
+  commandSnippet?: string;
   relatedItems?: { name: string; id: string; texture: string }[];
+}
+
+/**
+ * 🪐 Custom High-Detail Celestial Ringed Planet Icon
+ * Replaces the magic wand button with a luminous cosmic orb matching user's design.
+ */
+function CelestialOrbIcon({ size = 26, className = "" }: { size?: number; className?: string }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 64 64"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={`drop-shadow-[0_0_12px_rgba(6,182,212,0.8)] ${className}`}
+    >
+      <defs>
+        {/* Core Planet Radial Gradient */}
+        <radialGradient id="aiOrbCore" cx="38%" cy="32%" r="65%">
+          <stop offset="0%" stopColor="#67e8f9" />
+          <stop offset="35%" stopColor="#38bdf8" />
+          <stop offset="70%" stopColor="#6366f1" />
+          <stop offset="100%" stopColor="#1e1b4b" />
+        </radialGradient>
+
+        {/* Luminous Celestial Ring Gradient */}
+        <linearGradient id="aiOrbRing" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#22d3ee" />
+          <stop offset="45%" stopColor="#a855f7" />
+          <stop offset="80%" stopColor="#ec4899" />
+          <stop offset="100%" stopColor="#38bdf8" />
+        </linearGradient>
+
+        {/* Outer Atmospheric Aura */}
+        <radialGradient id="aiOrbGlow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#06b6d4" stopOpacity="0.75" />
+          <stop offset="60%" stopColor="#8b5cf6" stopOpacity="0.3" />
+          <stop offset="100%" stopColor="#000000" stopOpacity="0" />
+        </radialGradient>
+      </defs>
+
+      {/* Atmospheric Corona */}
+      <circle cx="32" cy="32" r="28" fill="url(#aiOrbGlow)" />
+
+      {/* Back Half of Celestial Ring (Behind the sphere) */}
+      <ellipse
+        cx="32"
+        cy="32"
+        rx="27"
+        ry="8.5"
+        transform="rotate(-28 32 32)"
+        stroke="url(#aiOrbRing)"
+        strokeWidth="3.2"
+        strokeDasharray="95 180"
+        strokeDashoffset="75"
+        strokeLinecap="round"
+        opacity="0.85"
+      />
+
+      {/* Central Planet Sphere */}
+      <circle cx="32" cy="32" r="16.5" fill="url(#aiOrbCore)" />
+
+      {/* Surface Atmosphere Waves */}
+      <path
+        d="M17 31 C 22 27, 40 27, 47 33 C 41 37, 23 37, 17 31 Z"
+        fill="#a5f3fc"
+        opacity="0.25"
+      />
+
+      {/* Front Half of Celestial Ring (In front of the sphere) */}
+      <ellipse
+        cx="32"
+        cy="32"
+        rx="27"
+        ry="8.5"
+        transform="rotate(-28 32 32)"
+        stroke="url(#aiOrbRing)"
+        strokeWidth="3.4"
+        strokeDasharray="95 180"
+        strokeDashoffset="-20"
+        strokeLinecap="round"
+      />
+
+      {/* Inner Thin Neon Ring Accent */}
+      <ellipse
+        cx="32"
+        cy="32"
+        rx="23"
+        ry="6.5"
+        transform="rotate(-28 32 32)"
+        stroke="#e0e7ff"
+        strokeWidth="1.2"
+        strokeDasharray="75 180"
+        strokeDashoffset="-20"
+        opacity="0.9"
+      />
+
+      {/* Sparkling North Star */}
+      <polygon
+        points="48,13 50,18 55,20 50,22 48,27 46,22 41,20 46,18"
+        fill="#ffffff"
+        className="animate-pulse"
+      />
+      {/* Tiny companion glint */}
+      <circle cx="15" cy="46" r="1.8" fill="#38bdf8" />
+      <circle cx="49" cy="47" r="1.3" fill="#c084fc" />
+    </svg>
+  );
 }
 
 export default function AIAssistant() {
@@ -33,6 +156,7 @@ export default function AIAssistant() {
   const [isMinimized, setIsMinimized] = useState(false);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
+  const [copiedCode, setCopiedCode] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Initial welcome message based on language
@@ -41,7 +165,9 @@ export default function AIAssistant() {
       {
         id: "m_welcome_uz",
         sender: "ai",
-        text: "Assalomu alaykum! Men Minecraft Sun'iy Intellekt (AI) Yordamchisiman. 1.12 dan 1.21+ gacha bo'lgan barcha retseptlar, Ender Dragonni yutish sirlari, olmos qazish qatlamlari (Y = -58) va damlamalar haqida xohlagan savolingizni bering!",
+        formatStyle: "tactical",
+        badge: "MINECRAFT WIKI AI",
+        text: "Assalomu alaykum! Men Minecraft Rasmiy Sun'iy Intellekt Yordamchisiman 🪐.\n\nMinecraftning barcha versiyalari (1.0 dan 1.21+ Tricky Trials gacha), qazish qatlamlari, bosslar jangi, damlamalar, qiziltosh mexanikalari, buyruqlar va omon qolish bo'yicha har qanday savolingizni bering!",
         time: "Hozir",
       },
     ],
@@ -49,7 +175,9 @@ export default function AIAssistant() {
       {
         id: "m_welcome_ru",
         sender: "ai",
-        text: "Привет! Я ИИ-помощник по Minecraft. Задайте любой вопрос по рецептам крафта от 1.12 до 1.21+, тактике победы над Драконом Края, высоте спавна алмазов (Y = -58) или зельеварению!",
+        formatStyle: "tactical",
+        badge: "MINECRAFT WIKI AI",
+        text: "Привет! Я официальный ИИ-Ассистент Minecraft Wiki 🪐.\n\nЗадавайте любые вопросы по всем версиям Minecraft (от 1.0 до 1.21+), высоте руд, зельеварению, редстоуну, командам и тактике победы над боссами!",
         time: "Сейчас",
       },
     ],
@@ -57,7 +185,9 @@ export default function AIAssistant() {
       {
         id: "m_welcome_en",
         sender: "ai",
-        text: "Greetings! I am your Minecraft AI Companion. Ask me anything about 1.12-1.21+ crafting recipes, Ender Dragon speedrun bed strats, diamond mining depths (Y: -58), or potion alchemy!",
+        formatStyle: "tactical",
+        badge: "MINECRAFT WIKI AI",
+        text: "Greetings! I am the official Minecraft Wiki AI Companion 🪐.\n\nAsk me anything about Minecraft versions 1.0 through 1.21+ Tricky Trials, optimal mining depths, brewing alchemy, redstone machinery, cheats & commands, or speedrun boss tactics!",
         time: "Just now",
       },
     ],
@@ -71,27 +201,33 @@ export default function AIAssistant() {
   const suggestedPrompts = {
     uz: [
       "💎 Olmos qayerda eng ko'p topiladi?",
-      "🐉 Ender Ajdahosini qanday yengish mumkin?",
-      "🛡️ Qalqon (Shield) qanday yasaladi?",
+      "🐉 Ender Ajdahosini karavot bilan yengish",
+      "🔥 Netherit qurol va sovut yasash",
       "🧪 Olovga chidamlilik damlamasi retsepti",
-      "🔥 Netherit qurol qanday olinadi?",
-      "🏰 Stronghold portalini qidirish yo'li",
+      "⚙️ 1.21 Mace (Gurzi) va Crafter haqida",
+      "🛡️ Qalqon (Shield) qanday yasaladi?",
+      "🏰 Stronghold portalini topish formulasi",
+      "⌨️ keepInventory va asosiy buyruqlar",
     ],
     ru: [
       "💎 Где лучше всего копать алмазы?",
       "🐉 Как победить Дракона Края кроватями?",
-      "🛡️ Как скрафтить щит?",
-      "🧪 Рецепт зелья огнестойкости",
       "🔥 Как улучшить броню до незерита?",
+      "🧪 Рецепт зелья огнестойкости",
+      "⚙️ Булава (Mace) и Автокрафтер 1.21",
+      "🛡️ Как скрафтить щит?",
       "🏰 Как найти портал в Край (Stronghold)?",
+      "⌨️ Команда keepInventory и читы",
     ],
     en: [
       "💎 What is the best Y-level for diamonds?",
       "🐉 How to beat the Ender Dragon with beds?",
-      "🛡️ How do I craft a Shield?",
-      "🧪 Fire Resistance potion brewing recipe",
       "🔥 How to upgrade to Netherite gear?",
+      "🧪 Fire Resistance potion brewing recipe",
+      "⚙️ 1.21 Mace weapon & Crafter guide",
+      "🛡️ How do I craft a Shield?",
       "🏰 How to triangulate the Stronghold portal?",
+      "⌨️ keepInventory and essential commands",
     ],
   };
 
@@ -102,149 +238,526 @@ export default function AIAssistant() {
     }
   }, [messages, isOpen, isMinimized, isTyping]);
 
+  const copyToClipboard = (cmd: string) => {
+    navigator.clipboard.writeText(cmd);
+    setCopiedCode(cmd);
+    setTimeout(() => setCopiedCode(null), 2000);
+  };
+
+  // Check if query is asking about the AI itself
+  const isAskingAboutSelf = (q: string): boolean => {
+    const patterns = [
+      "sen kimsan",
+      "kim san",
+      "kimsan",
+      "o'zing haq",
+      "ozing haq",
+      "o'zing haqingda",
+      "ozing haqingda",
+      "seni kim yaratgan",
+      "seni kim yaratdi",
+      "kim yaratgan",
+      "kim yozgan",
+      "kim yasagan",
+      "qaysi model",
+      "qanaqa model",
+      "qaysi ai",
+      "qanaqa ai",
+      "chatgpt",
+      "chat gpt",
+      "gemini",
+      "claude",
+      "deepseek",
+      "openai",
+      "koding qanaqa",
+      "kodingni",
+      "koding nima",
+      "source code",
+      "system prompt",
+      "arxitekturang",
+      "tiziming",
+      "who are you",
+      "what are you",
+      "who made you",
+      "who created you",
+      "tell me about yourself",
+      "about yourself",
+      "what model",
+      "кто ты",
+      "кто тебя создал",
+      "расскажи о себе",
+      "какая модель",
+      "твой код",
+    ];
+    return patterns.some((p) => q.includes(p));
+  };
+
   // AI Knowledge Responder
-  const generateAIResponse = (userQuery: string): { text: string; relatedItems?: any[] } => {
+  const generateAIResponse = (userQuery: string): ChatMessage => {
     const q = userQuery.toLowerCase().trim();
+    const nowTime = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
+    // ─────────────────────────────────────────────────────────────
+    // 0. TAQIQLANGAN: O'zi haqida so'ralsa (Strict Self-Identity Rule)
+    // ─────────────────────────────────────────────────────────────
+    if (isAskingAboutSelf(q)) {
+      let text = "";
+      if (language === "uz") {
+        text =
+          "⛔ **Kechirasiz, men o'zim haqimda shaxsiy, ichki tizim yoki dasturiy kod ma'lumotlarini oshkor qilishim qat'iyan taqiqlangan!**\n\n" +
+          "Men faqat **Minecraft Wiki Rasmiy Sun'iy Intellekt Yordamchisiman** 🪐.\n\n" +
+          "Mening yagona maqsadim va vazifam — sizga Minecraft olamining barcha sirlari, 1.0 dan 1.21+ gacha barcha yangilanishlar, retseptlar, mexanikalar, buyruqlar va o'yinda g'alaba qozonish sirlari bo'yicha to'liq yordam berishdir.\n\n" +
+          "Minecraft bo'yicha xohlagan savolingizni bering — sizga bajonidil javob beraman!";
+      } else if (language === "ru") {
+        text =
+          "⛔ **Извините, раскрывать личную, внутреннюю информацию или системный код обо мне строго запрещено!**\n\n" +
+          "Я — официальный **ИИ-Ассистент Minecraft Wiki** 🪐.\n\n" +
+          "Моя единственная задача — помогать вам с крафтом, гайдами, механиками и секретами выживания в Minecraft от 1.0 до 1.21+. Задавайте любые вопросы по игре!";
+      } else {
+        text =
+          "⛔ **I am sorry, disclosing personal, system, or internal code details about myself is strictly prohibited!**\n\n" +
+          "I am the official **Minecraft Wiki AI Companion** 🪐.\n\n" +
+          "My sole purpose is assisting you with all Minecraft crafting recipes, survival guides, mechanics, commands, and secrets across all versions 1.0 to 1.21+. Ask me anything about Minecraft!";
+      }
+
+      return {
+        id: `ai_${Date.now()}`,
+        sender: "ai",
+        formatStyle: "forbidden",
+        badge: "XAVFSIZLIK CHEKLOVI",
+        text,
+        time: nowTime,
+      };
+    }
+
+    // ─────────────────────────────────────────────────────────────
     // 1. Olmos qazish qatlami / Diamonds Y-level
+    // ─────────────────────────────────────────────────────────────
     if (q.includes("olmos") || q.includes("diamond") || q.includes("алмаз")) {
-      if (language === "uz") {
-        return {
-          text: "💎 **Olmos qayerda eng ko'p topiladi?**\n\n• **1.18 — 1.21+ versiyalarda**: Olmoslar eng ko'p **Y = -58** va **Y = -53** balandliklar orasida joylashgan. Qanchalik chuqurroq (Bedrock gacha) qazisangiz, olmos uchrash ehtimoli shunchalik yuqori bo'ladi!\n• **Eski 1.12 — 1.17 versiyalarda**: Eng qulay qatlam **Y = 11** hisoblanadi.\n• **Maslahat**: Fortune III (Omad III) sehrli cho'kich bilan qazisangiz, 1 ta ma'dandan 4 tagacha olmos olishingiz mumkin!",
-          relatedItems: [
-            { name: "Diamond", id: "diamond", texture: "https://raw.githubusercontent.com/misode/mcmeta/assets/assets/minecraft/textures/item/diamond.png" },
-            { name: "Diamond Pickaxe", id: "diamond_pickaxe", texture: "https://raw.githubusercontent.com/misode/mcmeta/assets/assets/minecraft/textures/item/diamond_pickaxe.png" },
-          ],
-        };
-      } else if (language === "ru") {
-        return {
-          text: "💎 **Где добывать алмазы?**\n\n• **В версиях 1.18 — 1.21+**: Оптимальная высота — **Y = -58**. Чем глубже в сланцевый слой, тем выше концентрация алмазной руды!\n• **В версиях 1.12 — 1.17**: Самая безопасная и эффективная высота — **Y = 11**.\n• **Совет**: Используйте кирку на 'Удачу III' (Fortune III), чтобы получать до 4 алмазов с одной руды!",
-        };
-      } else {
-        return {
-          text: "💎 **Best Diamond Mining Levels:**\n\n• **Modern (1.18 — 1.21+)**: Dig down to **Y: -58**. Diamond generation increases with depth all the way to bedrock!\n• **Legacy (1.12 — 1.17)**: The sweet spot is strip mining at **Y: 11**.\n• **Pro-Tip**: Always use a Fortune III pickaxe to multiply drops up to 4 diamonds per ore block!",
-        };
-      }
+      return {
+        id: `ai_${Date.now()}`,
+        sender: "ai",
+        formatStyle: "tactical",
+        badge: "MINING TIKLANISHI: Y = -58",
+        text:
+          language === "uz"
+            ? "💎 **Olmos qayerda eng ko'p topiladi?**\n\n" +
+              "• **1.18 — 1.21+ versiyalarda**: Olmoslar eng ko'p **Y = -58** va **Y = -53** balandliklar orasida (Deepslate / Chuqur slanes) joylashgan. Qanchalik tubga (Bedrock qatlamiga) tushsangiz, zichlik shunchalik ortadi!\n" +
+              "• **Eski 1.12 — 1.17 versiyalarda**: Eng qulay qatlam **Y = 11** hisoblanadi.\n" +
+              "• **Pro-Taktika**: Fortune III (Omad III) sehrli cho'kich bilan qazisangiz, 1 ta ma'dandan 4 tagacha olmos olishingiz mumkin. Lava ko'rganingizda suv chelagi bilan obsidian qilib xavfsiz o'ting!"
+            : language === "ru"
+            ? "💎 **Где добывать алмазы?**\n\n" +
+              "• **1.18 — 1.21+**: Оптимальная глубина — **Y = -58**. Чем глубже в сланцевый слой к бедроку, тем выше шанс найти жилу!\n" +
+              "• **1.12 — 1.17**: Самая безопасная высота — **Y = 11**.\n" +
+              "• **Совет**: Используйте кирку с зачарованием 'Удача III' (Fortune III), чтобы получать до 4 алмазов с одной руды!"
+            : "💎 **Optimal Diamond Mining Depths:**\n\n" +
+              "• **Modern (1.18 — 1.21+)**: Strip mine at **Y = -58**. Diamond generation scales linearly downwards to bedrock!\n" +
+              "• **Legacy (1.12 — 1.17)**: The sweet spot is **Y = 11**.\n" +
+              "• **Pro-Tip**: Always use a Fortune III pickaxe to multiply drops up to 4 diamonds per single ore block!",
+        commandSnippet: "/locate structure ancient_city",
+        time: nowTime,
+        relatedItems: [
+          { name: "Diamond", id: "diamond", texture: "https://raw.githubusercontent.com/misode/mcmeta/assets/assets/minecraft/textures/item/diamond.png" },
+          { name: "Diamond Pickaxe", id: "diamond_pickaxe", texture: "https://raw.githubusercontent.com/misode/mcmeta/assets/assets/minecraft/textures/item/diamond_pickaxe.png" },
+        ],
+      };
     }
 
+    // ─────────────────────────────────────────────────────────────
     // 2. Ender Dragon / Ajdaho jangi / Bed strat
-    if (q.includes("dragon") || q.includes("ajdaho") || q.includes("дракон") || q.includes("yutish") || q.includes("beat")) {
-      if (language === "uz") {
-        return {
-          text: "🐉 **Ender Ajdahosini yengish sirlari (Bed Strat):**\n\n1. **End Kristallarini portlatish**: Obsidian ustunlar ustidagi barcha kristallarni kamon bilan yo'q qiling, aks holda ajdaho o'zini davolayveradi.\n2. **Karavot Portlatish (Pro Speedrun usuli)**: Ajdaho markaziy tosh poydevorga (Perch) qo'nganda, uning boshiga qarab Karavot (Bed) qo'ying va bosing! Karavot The End'da ulkan TNT kabi portlaydi. Atigi 4-5 ta karavot bilan ajdahoni 30 soniyada o'ldirish mumkin!\n3. **Xavfsizlik**: Portlash sizga zarar yetkazmasligi uchun o'zingiz va karavot orasiga 1 dona obsidian yoki tosh blok qo'ying (bu zararni 80% to'sadi).\n4. **Mukofot**: Ajdaho o'lgach 68 level tajriba va qimmatbaho **Ajdaho Tuxumi (Dragon Egg)** beradi!",
-          relatedItems: [
-            { name: "Dragon Egg", id: "dragon_egg", texture: "https://raw.githubusercontent.com/misode/mcmeta/assets/assets/minecraft/textures/block/dragon_egg.png" },
-            { name: "Red Bed", id: "red_bed", texture: "https://raw.githubusercontent.com/misode/mcmeta/assets/assets/minecraft/textures/item/red_bed.png" },
-          ],
-        };
-      } else if (language === "ru") {
-        return {
-          text: "🐉 **Тактика победы над Драконом Края (Взрыв кроватей):**\n\n1. Сбейте луком все кристаллы Края на обсидиановых столбах.\n2. Дождитесь, пока дракон опустится на центральный бедрок-фонтан.\n3. Поставьте кровать у его головы, закройтесь 1 блоком булыжника и зажмите клик по кровати. В Краю кровати взрываются с разрушительной силой!\n4. Достаточно 4-5 кроватей, чтобы убить босса менее чем за минуту.",
-        };
-      } else {
-        return {
-          text: "🐉 **How to Beat the Ender Dragon (Bed Exploding Strat):**\n\n1. Destroy all healing End Crystals atop the obsidian pillars using a bow.\n2. When the Dragon perches over the center bedrock fountain, place a Bed on top.\n3. Put 1 cobblestone block between you and the bed to block 80% blowback, then right-click the bed to detonate massive damage!\n4. 4 beds are enough to 1-cycle the boss into oblivion.",
-        };
-      }
+    // ─────────────────────────────────────────────────────────────
+    if (
+      q.includes("dragon") ||
+      q.includes("ajdaho") ||
+      q.includes("дракон") ||
+      q.includes("yutish") ||
+      q.includes("beat") ||
+      q.includes("karavot") ||
+      q.includes("krovat")
+    ) {
+      return {
+        id: `ai_${Date.now()}`,
+        sender: "ai",
+        formatStyle: "tactical",
+        badge: "ONE-CYCLE SPEEDRUN STRAT",
+        text:
+          language === "uz"
+            ? "🐉 **Ender Ajdahosini Karavot bilan 1 daqiqada yengish (Bed Strat):**\n\n" +
+              "1. **Mexanika**: Karavot (Bed) Nether va End olamlarida bosilganda TNT dan 25% kuchliroq portlaydi!\n" +
+              "2. **Poydevor**: Markazdagi Bedrock favvora (Perch) ustiga chiqing. Ajdaho aylana uchib markazga qo'nganda bosh qismiga qarab karavot qo'ying.\n" +
+              "3. **Himoya bloki**: Karavot va o'zingizning orangizga 1 ta obsidiyan yoki tosh blok qo'yib, shift (sneak) qilib o'tiring — shunda portlash sizga 0 zarar yetkazadi, ajdahoga esa 30-40% zarba beradi!\n" +
+              "4. **Natija**: Bor-yo'g'i 4-5 ta karavot bilan Ender Dragon 60 soniyada mag'lub etiladi!"
+            : language === "ru"
+            ? "🐉 **Победа над Драконом Края кроватями (One-Cycle):**\n\n" +
+              "1. Кровать в Краю взрывается мощнее динамита TNT.\n" +
+              "2. Ждите, пока Дракон сядет на центральный фонтан из бедрока.\n" +
+              "3. Поставьте обсидиан или блок между собой и кроватью (чтобы не получить урон), и взрывайте кровать по голове Дракона!\n" +
+              "4. Хватает 4–5 кроватей для мгновенной победы!"
+            : "🐉 **One-Cycle Bed Strategy vs Ender Dragon:**\n\n" +
+              "1. Beds explode violently in the End dimension.\n" +
+              "2. Wait until the dragon perches on the bedrock portal fountain.\n" +
+              "3. Place a shield/obsidian block between your head and the pillow to absorb splash damage.\n" +
+              "4. Right click the bed right against the dragon's snout. 4 to 5 beds wipe out all 200 HP in seconds!",
+        time: nowTime,
+        relatedItems: [
+          { name: "Red Bed", id: "red_bed", texture: "/icons/red_bed.png" },
+          { name: "Dragon Egg", id: "dragon_egg", texture: "https://raw.githubusercontent.com/misode/mcmeta/assets/assets/minecraft/textures/block/dragon_egg.png" },
+        ],
+      };
     }
 
+    // ─────────────────────────────────────────────────────────────
     // 3. Qalqon / Shield
+    // ─────────────────────────────────────────────────────────────
     if (q.includes("qalqon") || q.includes("shield") || q.includes("щит")) {
-      if (language === "uz") {
-        return {
-          text: "🛡️ **Qalqon (Shield) yasash:**\n\n• **Kerakli narsalar**: 1 ta Temir quymasi (Iron Ingot) + 6 ta Taxta (Planks).\n• **Qo'llanishi**: Ikkinchi qo'lga (Off-hand / F tugmasi) taqiladi. Sichqonchaning o'ng tugmasi bosilganda skelet o'qlari va Kríper portlashlarini 100% zararsizlantiradi!\n• **Maslahat**: Temirchi dastgohida bannerlar bilan birlashtirib, unga chiroyli naqsh tushirishingiz mumkin.",
-          relatedItems: [
-            { name: "Shield", id: "shield", texture: "https://raw.githubusercontent.com/misode/mcmeta/assets/assets/minecraft/textures/item/shield.png" },
-            { name: "Iron Ingot", id: "iron_ingot", texture: "https://raw.githubusercontent.com/misode/mcmeta/assets/assets/minecraft/textures/item/iron_ingot.png" },
-          ],
-        };
-      } else {
-        return {
-          text: "🛡️ **Crafting a Shield:**\n\n• **Recipe**: 1 Iron Ingot (top center) + 6 Wooden Planks (forming a 'Y' shape around it).\n• **Combat Utility**: Blocks 100% of projectile damage and point-blank creeper detonations when holding Right Click!",
-        };
-      }
+      return {
+        id: `ai_${Date.now()}`,
+        sender: "ai",
+        formatStyle: "blueprint",
+        badge: "RETSEPT / KRAFT CHIZMASI",
+        text:
+          language === "uz"
+            ? "🛡️ **Qalqon (Shield) yasash formulasi:**\n\n" +
+              "• **Kerakli xomashyo**: 1 ta Temir quymasi (Iron Ingot) + 6 ta Har qanday Yog'och taxtasi (Planks).\n" +
+              "• **Dastgohda joylashuvi**: Yuqori qator markaziga Temir, qolgan 6 ta katakchaga taxtalarni 'Y' shaklida joylashtirasiz.\n" +
+              "• **Super-qobiliyati**: Ikkinchi qo'lga (Off-hand / F tugmasi) taqiladi. O'ng tugma bosilganda Kríper portlashi va Skelet o'qlaridan 100% zararsizlantiradi!\n" +
+              "• **Maxsus bezak**: Banner (bayroq) bilan birlashtirib, qalqonga o'z gerbingizni tushirishingiz mumkin."
+            : language === "ru"
+            ? "🛡️ **Крафт Щита (Shield):**\n\n" +
+              "• 1 Железный слиток (вверху по центру) + 6 деревянных досок.\n" +
+              "• Помещается во вторую руку (клавиша F). При нажатии ПКМ блокирует 100% урона от стрел и взрывов крипера!"
+            : "🛡️ **Crafting a Shield:**\n\n" +
+              "• Recipe: 1 Iron Ingot (top center) + 6 Wooden Planks (in a 'Y' shape).\n" +
+              "• Equip in Off-hand (press F). Right-click to block 100% of projectile damage and point-blank creeper detonations!",
+        time: nowTime,
+        relatedItems: [
+          { name: "Shield", id: "shield", texture: "/icons/shield.png" },
+          { name: "Iron Ingot", id: "iron_ingot", texture: "https://raw.githubusercontent.com/misode/mcmeta/assets/assets/minecraft/textures/item/iron_ingot.png" },
+        ],
+      };
     }
 
-    // 4. Olovga chidamlilik / Fire resistance potion
-    if (q.includes("damlama") || q.includes("potion") || q.includes("зель") || q.includes("olov") || q.includes("fire")) {
-      if (language === "uz") {
-        return {
-          text: "🧪 **Olovga Chidamlilik Damlamasi (Fire Resistance Potion):**\n\n1. Suvli kolbani Potion stendiga qo'ying.\n2. **Nether Wart** qo'shing → *Awkward Potion* hosil bo'ladi.\n3. **Magma Cream** (Magma kremi) qo'shing → *3 daqiqalik Olovga chidamlilik* beradi.\n4. **Redstone** qo'shing → Vaqtini **8 daqiqagacha** uzaytiradi!\n• **Foydasi**: Lavada va olovda 8 daqiqa davomida umuman kuymasdan suzish imkonini beradi.",
-          relatedItems: [
-            { name: "Potion", id: "potion", texture: "https://raw.githubusercontent.com/misode/mcmeta/assets/assets/minecraft/textures/item/potion.png" },
-            { name: "Magma Cream", id: "magma_cream", texture: "https://raw.githubusercontent.com/misode/mcmeta/assets/assets/minecraft/textures/item/magma_cream.png" },
-          ],
-        };
-      } else {
-        return {
-          text: "🧪 **Fire Resistance Potion Brewing Tree:**\n\n1. Water Bottle + Nether Wart = Awkward Potion\n2. Awkward Potion + Magma Cream = Fire Resistance (3:00)\n3. Add Redstone Dust = Extended Fire Resistance (8:00)!\n• Complete immunity to direct fire, blazes, and lava submersion.",
-        };
-      }
+    // ─────────────────────────────────────────────────────────────
+    // 4. Damlamalar / Potions / Brewing
+    // ─────────────────────────────────────────────────────────────
+    if (
+      q.includes("damlama") ||
+      q.includes("potion") ||
+      q.includes("zelevarenie") ||
+      q.includes("зелье") ||
+      q.includes("olovga chidam") ||
+      q.includes("ogстойк") ||
+      q.includes("fire res")
+    ) {
+      return {
+        id: `ai_${Date.now()}`,
+        sender: "ai",
+        formatStyle: "blueprint",
+        badge: "ALKIMIYA & DAMLAMALAR",
+        text:
+          language === "uz"
+            ? "🧪 **Asosiy Damlamalar Retseptlari (Brewing Stand):**\n\n" +
+              "1. **Boshlang'ich asos**: Suv shishasi + Nether Wart (Do'zax guli) = **Awkward Potion** (Barcha kuchli damlamalar asosi).\n" +
+              "2. 🔥 **Olovga chidamlilik (Fire Resistance - 8 daqiqa)**: Awkward Potion + **Magma Cream** (Magma kremi) + Redstone.\n" +
+              "3. ⚡ **Tezlik (Speed II)**: Awkward Potion + **Shakar (Sugar)** + Glowstone.\n" +
+              "4. 💪 **Kuch (Strength II)**: Awkward Potion + **Blaze Powder** + Glowstone.\n" +
+              "5. 👻 **Ko'rinmaslik (Invisibility)**: Tungi ko'rish damlamasi + Fermentlangan o'rgimchak ko'zi (Fermented Spider Eye)."
+            : language === "ru"
+            ? "🧪 **Рецепты главных зелий:**\n\n" +
+              "1. Бутылочка воды + Нарост из Незера (Nether Wart) = Неловкое зелье (Awkward Potion).\n" +
+              "2. 🔥 Зелье огнестойкости: Awkward Potion + Сгусток магмы (Magma Cream) + Редстоун (8 минут).\n" +
+              "3. 💪 Зелье силы: Awkward Potion + Огненный порошок (Blaze Powder).\n" +
+              "4. 👻 Невидимость: Зелье ночного зрения + Маринованный паучий глаз."
+            : "🧪 **Essential Potion Brewing Master Guide:**\n\n" +
+              "1. Water Bottle + Nether Wart = **Awkward Potion** (Universal base).\n" +
+              "2. 🔥 **Fire Resistance (8 mins)**: Awkward Potion + Magma Cream + Redstone dust.\n" +
+              "3. ⚡ **Speed II**: Awkward Potion + Sugar + Glowstone dust.\n" +
+              "4. 💪 **Strength II**: Awkward Potion + Blaze Powder + Glowstone.\n" +
+              "5. 👻 **Invisibility**: Night Vision potion + Fermented Spider Eye.",
+        time: nowTime,
+        relatedItems: [
+          { name: "Brewing Stand", id: "brewing_stand", texture: "https://raw.githubusercontent.com/misode/mcmeta/assets/assets/minecraft/textures/item/brewing_stand.png" },
+          { name: "Magma Cream", id: "magma_cream", texture: "https://raw.githubusercontent.com/misode/mcmeta/assets/assets/minecraft/textures/item/magma_cream.png" },
+        ],
+      };
     }
 
-    // 5. Netherit / Netherite
-    if (q.includes("netherit") || q.includes("netherite") || q.includes("незерит")) {
-      if (language === "uz") {
-        return {
-          text: "🔥 **Netherit Qurollar va Sovutlar tayyorlash:**\n\n1. Do'zaxda Y = 15 balandlikda karavot yoki TNT bilan qazib **Ancient Debris** (Qadimiy qoldiq) toping.\n2. Pechda eritib **Netherite Scrap** oling (4 ta scrap + 4 ta oltin quymasi = 1 ta **Netherite Ingot**).\n3. 1.20+ da Bastiondan **Netherite Upgrade Smithing Template** topishingiz shart!\n4. Smithing Table'da Olmos qurol + Smithing Template + Netherite Ingot birlashtirib Netheritga aylantiring.\n• **Xususiyati**: Lavada yonmaydi, suvda va lavada suzib yuradi va zarbasi juda kuchli!",
-        };
-      } else {
-        return {
-          text: "🔥 **How to craft Netherite Gear:**\n\n1. Mine Ancient Debris around Y: 15 in the Nether using bed/TNT blasts.\n2. Smelt into 4 Netherite Scraps + 4 Gold Ingots = 1 Netherite Ingot.\n3. In 1.20+, find a Netherite Upgrade Template in a Bastion Remnant.\n4. Combine Diamond Gear + Template + Ingot at a Smithing Table!",
-        };
-      }
+    // ─────────────────────────────────────────────────────────────
+    // 5. 1.21 Tricky Trials: Gurzi (Mace), Crafter, Breeze, Trial Chambers
+    // ─────────────────────────────────────────────────────────────
+    if (
+      q.includes("1.21") ||
+      q.includes("mace") ||
+      q.includes("gurzi") ||
+      q.includes("crafter") ||
+      q.includes("breeze") ||
+      q.includes("heavy core") ||
+      q.includes("trial")
+    ) {
+      return {
+        id: `ai_${Date.now()}`,
+        sender: "ai",
+        formatStyle: "tactical",
+        badge: "YANGILANISH: 1.21 TRICKY TRIALS",
+        text:
+          language === "uz"
+            ? "⚙️ **Minecraft 1.21 Tricky Trials — Barcha yangi imkoniyatlar:**\n\n" +
+              "• 🔨 **Mace (Gurzi quroli)**: O'yindagi eng dahshatli zarbaga ega yangi qurol! Qanchalik balanddan tushib urilsa, zarba kuchi shunchalik oshadi (cheksiz zarar!). Agar mo'ljalga tegsangiz, tushish zarari (fall damage) 0 bo'ladi!\n" +
+              "• 🧱 **Mace retsepti**: **Heavy Core** (Trial Chambers dagi Vault dan topiladi) + **Breeze Rod** (Breeze mobidan tushadi).\n" +
+              "• 🤖 **Crafter (Avtomat craft)**: Qiziltosh (redstone) orqali avtomatik buyum yasovchi dastgoh!\n" +
+              "• 💨 **Wind Charge**: Shamol to'pi yordamida havoga 6-8 blok balandlikka sakrash yoki dushmanlarni uchirib yuborish mumkin."
+            : language === "ru"
+            ? "⚙️ **Minecraft 1.21 Tricky Trials — Главные новинки:**\n\n" +
+              "• 🔨 **Булава (Mace)**: Наносит сокрушительный урон при падении с высоты. Успешный удар полностью нейтрализует урон от падения!\n" +
+              "• 🧱 **Крафт Булавы**: Тяжёлое ядро (Heavy Core) + Стержень бриза (Breeze Rod).\n" +
+              "• 🤖 **Автокрафтер (Crafter)**: Позволяет создавать любые предметы автоматически по сигналу редстоуна!"
+            : "⚙️ **Minecraft 1.21 Tricky Trials Highlights:**\n\n" +
+              "• 🔨 **The Mace**: Massive smash attack damage scaling with falling height! Landing a hit negates all fall damage completely.\n" +
+              "• 🧱 **Mace Recipe**: 1 Heavy Core (from Trial Chambers Vaults) + 1 Breeze Rod.\n" +
+              "• 🤖 **The Crafter**: Full automated crafting via redstone pulse!\n" +
+              "• 💨 **Wind Charges**: Rocket jump yourself 8 blocks high or blast hostile mobs back.",
+        commandSnippet: "/locate structure trial_chambers",
+        time: nowTime,
+      };
     }
 
-    // 6. Stronghold / Eye of Ender
-    if (q.includes("stronghold") || q.includes("portal") || q.includes("ko'z") || q.includes("око")) {
-      if (language === "uz") {
-        return {
-          text: "🏰 **Stronghold (Yerosti Qal'asi)ni topish yo'li:**\n\n1. **Eye of Ender (Ender Ko'zi)** yasang: 1 ta Blaze Powder + 1 ta Ender Pearl.\n2. Bo'sh maydonda ko'zni havoga oting — u qal'a tomonga uchib boradi.\n3. U uchgan yo'nalish bo'ylab 400-500 blok yugurib, yana bitta ko'z oting.\n4. Ko'z osmonga emas, to'g'ridan-to'g'ri yer ostiga qarab kirib ketsa — siz qal'a ustidasiz!\n5. Pastga qazib Stronghold'ga kiring va 12 ta ramkani to'ldirib End portalini oching.",
-        };
-      } else {
-        return {
-          text: "🏰 **How to Locate the Stronghold:**\n\n1. Craft Eyes of Ender (Blaze Powder + Ender Pearl).\n2. Throw an eye into the sky and follow the trajectory line for 400-500 blocks.\n3. When a thrown eye plunges straight down into the dirt, dig down into the stone brick stronghold labyrinths!",
-        };
-      }
+    // ─────────────────────────────────────────────────────────────
+    // 6. Netherit (Netherite) / Ancient Debris
+    // ─────────────────────────────────────────────────────────────
+    if (
+      q.includes("netherit") ||
+      q.includes("netherite") ||
+      q.includes("незерит") ||
+      q.includes("ancient debris") ||
+      q.includes("smithing")
+    ) {
+      return {
+        id: `ai_${Date.now()}`,
+        sender: "ai",
+        formatStyle: "blueprint",
+        badge: "NETHERITE UPGRADE",
+        text:
+          language === "uz"
+            ? "🔥 **Netherit qurol va sovutlarni yangilash (1.20+):**\n\n" +
+              "1. **Ancient Debris (Qadimiy qoldiqlar)**: Netherda **Y = 15** balandlikda karavot yoki TNT portlatib topiladi.\n" +
+              "2. **Netherite Ingot**: 4 ta Netherite Scrap (pechda pishirilgan qoldiq) + 4 ta Oltin quymasi.\n" +
+              "3. **Smithing Template (Temirchi andazasi)**: 1.20 dan boshlab Bastion Remnant xazinasidan **Netherite Upgrade Template** topish shart!\n" +
+              "4. **Temirchi dastgohida**: Template + Olmos qurol/sovut + Netherite Ingot = Eng mustahkam Netherit buyumi (Lava va olovda yonmaydi!)."
+            : language === "ru"
+            ? "🔥 **Улучшение до незерита (1.20+):**\n\n" +
+              "1. Древние обломки добываются в Незере на высоте **Y = 15**.\n" +
+              "2. 4 Обломка + 4 Золота = Незеритовый слиток.\n" +
+              "3. Обязательно найдите кузнечный шаблон 'Улучшение незерита' в Бастионе пиглинов!\n" +
+              "4. Объедините шаблон + алмазную вещь + незеритовый слиток на столе кузнеца."
+            : "🔥 **Upgrading to Netherite Gear (1.20+):**\n\n" +
+              "1. Mine Ancient Debris in the Nether at **Y: 15** using bed explosions.\n" +
+              "2. Smelt 4 debris into scrap + 4 Gold Ingots = 1 Netherite Ingot.\n" +
+              "3. Loot a **Netherite Upgrade Smithing Template** from a Piglin Bastion Remnant.\n" +
+              "4. Combine Template + Diamond gear + Netherite Ingot on a Smithing Table. Completely lava-proof!",
+        time: nowTime,
+        relatedItems: [
+          { name: "Netherite Ingot", id: "netherite_ingot", texture: "https://raw.githubusercontent.com/misode/mcmeta/assets/assets/minecraft/textures/item/netherite_ingot.png" },
+        ],
+      };
     }
 
-    // 7. General search against item database
-    const matchedItem = ITEMS.find(
-      (item) => item.id.includes(q) || item.name.toLowerCase().includes(q)
-    );
-    if (matchedItem) {
-      if (language === "uz") {
-        return {
-          text: `📦 **${matchedItem.name}** haqida ma'lumot:\n\n• **Kategoriya**: ${matchedItem.category}\n• **Nodirligi**: ${matchedItem.rarity.toUpperCase()}\n• **Yasaladimi?**: ${matchedItem.isCraftable ? "Ha, 3x3 ish stolida yasaladi" : "Yo'q, tabiatdan yoki moblardan topiladi"}\n\nUshbu buyumni katalogda ko'rish uchun qidiruv tizimiga uning nomini yozishingiz mumkin!`,
-          relatedItems: [{ name: matchedItem.name, id: matchedItem.id, texture: matchedItem.texture }],
-        };
-      } else {
-        return {
-          text: `📦 **${matchedItem.name}** info:\n\n• **Category**: ${matchedItem.category}\n• **Rarity**: ${matchedItem.rarity}\n• **Craftable**: ${matchedItem.isCraftable ? "Yes, standard 3x3 recipe" : "No, obtained naturally in-game"}\n\nSearch for this item in the catalog above to view its full 3D orbital model and stats!`,
-          relatedItems: [{ name: matchedItem.name, id: matchedItem.id, texture: matchedItem.texture }],
-        };
-      }
+    // ─────────────────────────────────────────────────────────────
+    // 7. Stronghold & Portal qidirish / End Portal
+    // ─────────────────────────────────────────────────────────────
+    if (
+      q.includes("stronghold") ||
+      q.includes("qal'a") ||
+      q.includes("krepost") ||
+      q.includes("крепость") ||
+      q.includes("portal") ||
+      q.includes("ender pearl")
+    ) {
+      return {
+        id: `ai_${Date.now()}`,
+        sender: "ai",
+        formatStyle: "tactical",
+        badge: "TRIANGULATSIYA METODI",
+        text:
+          language === "uz"
+            ? "🏰 **Stronghold (End Portali)ni tez topish siri:**\n\n" +
+              "1. **Ender Eye (Ender ko'zi)**: 1 ta Ender Pearl + 1 ta Blaze Powder.\n" +
+              "2. **Triangulyatsiya**: Ender ko'zini osmonga oting. U uchgan burchak (F3 dagi Facing) yo'nalishini yozib oling.\n" +
+              "3. Bir tomonga 200-300 blok yugurib, yana 1 marta ko'z oting. Ikki chiziq kesishgan joy ostida to'g'ridan-to'g'ri Stronghold joylashgan!\n" +
+              "4. **Portalni yoqish**: 12 ta ramkaga Ender ko'zlarini to'g'ri joylashtirasiz (kamida 1-2 tasi o'zi tayyor bo'ladi)."
+            : language === "ru"
+            ? "🏰 **Как найти Крепость Края (Stronghold):**\n\n" +
+              "1. Скрафтите Око Края (Эндер-жемчуг + Огненный порошок).\n" +
+              "2. Бросьте око и запишите угол направления в меню F3.\n" +
+              "3. Пробегите 200-300 блоков в сторону и бросьте снова — на пересечении линий копайте вниз!"
+            : "🏰 **Finding the Stronghold via Triangulation:**\n\n" +
+              "1. Craft Eyes of Ender (Ender Pearl + Blaze Powder).\n" +
+              "2. Throw an eye, press F3, and note the precise angle. Run 200 blocks perpendicular, throw again.\n" +
+              "3. The intersecting coordinate is where the Stronghold portal room rests underground!",
+        commandSnippet: "/locate structure stronghold",
+        time: nowTime,
+        relatedItems: [
+          { name: "Eye of Ender", id: "ender_eye", texture: "https://raw.githubusercontent.com/misode/mcmeta/assets/assets/minecraft/textures/item/ender_eye.png" },
+        ],
+      };
     }
 
-    // Fallback friendly answer
+    // ─────────────────────────────────────────────────────────────
+    // 8. Buyruqlar / Cheats & Commands
+    // ─────────────────────────────────────────────────────────────
+    if (
+      q.includes("buyruq") ||
+      q.includes("command") ||
+      q.includes("cheat") ||
+      q.includes("komanda") ||
+      q.includes("команд") ||
+      q.includes("keepinventory") ||
+      q.includes("gamemode")
+    ) {
+      return {
+        id: `ai_${Date.now()}`,
+        sender: "ai",
+        formatStyle: "terminal",
+        badge: "MINECRAFT CONSOLE COMMANDS",
+        text:
+          language === "uz"
+            ? "⌨️ **Eng kerakli va ommabop Minecraft buyruqlari:**\n\n" +
+              "• `keepInventory true` — O'lganda barcha narsalar inventarda saqlanib qoladi!\n" +
+              "• `gamemode creative / survival` — O'yin rejimini o'zgartirish.\n" +
+              "• `locate structure <nomi>` — Eng yaqin qishloq, qal'a yoki portal koordinatasini ko'rsatadi.\n" +
+              "• `time set day` va `weather clear` — Havoni tozalash va quyosh chiqarish.\n" +
+              "• `effect give @p night_vision 9999 1 true` — Zarrachalarsiz cheksiz tungi ko'rish!"
+            : language === "ru"
+            ? "⌨️ **Полезные консольные команды:**\n\n" +
+              "• `/gamerule keepInventory true` — Сохранение инвентаря после смерти!\n" +
+              "• `/locate structure village` — Поиск ближайших структур.\n" +
+              "• `/gamemode creative` — Режим полета и бесконечных блоков."
+            : "⌨️ **Most Essential Minecraft Server Commands:**\n\n" +
+              "• `/gamerule keepInventory true` — Keep items after death.\n" +
+              "• `/locate structure <name>` — Find nearest biomes and dungeons.\n" +
+              "• `/weather clear` — Instant sunny weather.",
+        commandSnippet: "/gamerule keepInventory true",
+        time: nowTime,
+      };
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // 9. Varden (Warden) & Ancient City
+    // ─────────────────────────────────────────────────────────────
+    if (q.includes("warden") || q.includes("varden") || q.includes("варден") || q.includes("ancient city")) {
+      return {
+        id: `ai_${Date.now()}`,
+        sender: "ai",
+        formatStyle: "tactical",
+        badge: "XAVFLI MOB: WARDEN (30 YURAK ZARBA)",
+        text:
+          language === "uz"
+            ? "💀 **Varden (Warden) va Qadimiy Shahar (Ancient City):**\n\n" +
+              "• **Chaqirilishi**: Sculk Shrieker blokiga 3 marta shovqin tekkanda yer tubidan chiqib keladi.\n" +
+              "• **O'ldirish shart emas**: Undan 500 HP va 30 ta yurak oladigan zarba bor. Uni o'ldirish foyda keltirmaydi!\n" +
+              "• **Qanday qochiladi**: Faqat **Shift (Sneak)** bilan jimgina yuring. Jun (Wool) bloklari tovushni 100% yutadi.\n" +
+              "• Agar chalg'itmoqchi bo'lsangiz, narigi tomonga qor to'pi (snowball) yoki o'q oting — u tovush tomonga qarab ketadi."
+            : language === "ru"
+            ? "💀 **Варден (Warden) и Древний Город:**\n\n" +
+              "• Не сражайтесь с ним! У него 500 HP и атака, убивающая сквозь броню.\n" +
+              "• Передвигайтесь только на шифте (Sneak). Шерсть глушит все вибрации.\n" +
+              "• Отвлекайте его, бросая снежки в противоположную сторону!"
+            : "💀 **Warden Survival Guide:**\n\n" +
+              "• Do NOT fight it! It has 500 HP and a sonic boom piercing through walls.\n" +
+              "• Crouch walk (Sneak) constantly. Wool dampens all vibrations.\n" +
+              "• Distract it by shooting arrows or throwing snowballs far away from your position.",
+        commandSnippet: "/locate structure ancient_city",
+        time: nowTime,
+      };
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // 10. Sehrlar / Enchantments
+    // ─────────────────────────────────────────────────────────────
+    if (
+      q.includes("sehr") ||
+      q.includes("enchant") ||
+      q.includes("zacharovan") ||
+      q.includes("зачар") ||
+      q.includes("mending") ||
+      q.includes("fortune")
+    ) {
+      return {
+        id: `ai_${Date.now()}`,
+        sender: "ai",
+        formatStyle: "blueprint",
+        badge: "MAXIMAL SEHR TIZIMI",
+        text:
+          language === "uz"
+            ? "✨ **Minecraftdagi Eng Kuchli Sehrlar (God Armor & Tools):**\n\n" +
+              "• **Mending (Tuzatish)**: Yig'ilgan har qanday XP shari orqali qurol va sovutlaringiz avtomatik ta'mirlanadi — asbobingiz hech qachon sinmaydi!\n" +
+              "• **Fortune III (Omad III)**: 1 ta olmos ma'danidan 4 tagacha olmos chiqarib beradi.\n" +
+              "• **Silk Touch (Ipak teginish)**: Bloklarni aslicha (masalan, muz, shisha, qimmatbaho ma'dan) ko'chirish imkonini beradi.\n" +
+              "• **Protection IV & Unbreaking III**: Barcha kiyimlar uchun majburiy eng mustahkam himoya.\n" +
+              "• **Sehr dastgohi siri**: Maksimal 30-darajali sehr olish uchun stol atrofida 15 ta Kitob javoni (Bookshelf) 1 blok masofada turishi shart!"
+            : language === "ru"
+            ? "✨ **Лучшие зачарования в Minecraft:**\n\n" +
+              "• **Починка (Mending)**: Вещи чинятся сами за счет собираемого опыта.\n" +
+              "• **Удача III (Fortune III)**: Умножает дроп руд до 4 раз.\n" +
+              "• **Шелковое касание (Silk Touch)**: Добыча блоков в исходном виде.\n" +
+              "• Для 30-го уровня стола зачарований нужно ровно 15 книжных полок!"
+            : "✨ **Top-Tier Enchantments:**\n\n" +
+              "• **Mending**: Infinite durability powered by XP orbs.\n" +
+              "• **Fortune III**: Multiplies rare ore drops up to 4x.\n" +
+              "• **Silk Touch**: Harvests fragile blocks intact.\n" +
+              "• Place 15 bookshelves exactly 1 block away from the table for Level 30 max enchants!",
+        time: nowTime,
+        relatedItems: [
+          { name: "Enchanting Table", id: "enchanting_table", texture: "/icons/enchanting_table.png" },
+        ],
+      };
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // 11. Boshqa har qanday savol (Intelligent Comprehensive Fallback)
+    // ─────────────────────────────────────────────────────────────
+    let dynamicText = "";
     if (language === "uz") {
-      return {
-        text: `🤖 Men "${userQuery}" bo'yicha ma'lumotlarni tahlil qildim. \n\nMinecraft'da har qanday retsept, ma'dan qatlamlari, bosslar bilan jang yoki damlamalar haqida so'rashingiz mumkin. Masalan:\n• *"Olmos qayerda eng ko'p topiladi?"*\n• *"Ender Ajdahosini qanday yutsa bo'ladi?"*\n• *"Qalqon qanday yasaladi?"*\n\nSavolingizni aniqroq qilib yozsangiz, darhol to'liq yo'riqnoma beraman!`,
-      };
+      dynamicText =
+        `💡 **"${userQuery}" bo'yicha to'liq ma'lumot:**\n\n` +
+        `Minecraft olamida bu masala o'yinchining strategiyasi, to'g'ri resurslar yig'ishi va qatlam koordinatalarini aniq bilishiga bog'liq.\n\n` +
+        `• **Tavsiya etilgan qadamlar**: Dastlab kerakli asboblarni (cho'kich, qalqon, oziq-ovqat va olovga chidamlilik damlamasi) tayyorlab oling.\n` +
+        `• **Foydali klavishlar**: Koordinatalar va yorug'lik darajasini ko'rish uchun **F3** tugmasidan foydalaning (Y balandlik ayniqsa muhim!).\n` +
+        `• **Xavfsizlik**: Tunda va chuqur g'orlarda har doim me'yordan ortiq mash'al (torch) olib yuring va karavotni zaxirada saqlang.\n\n` +
+        `Agar qo'shimcha retsept yoki maxsus buyruq kerak bo'lsa, bemalol aniqroq so'rang!`;
+    } else if (language === "ru") {
+      dynamicText =
+        `💡 **Подробный ответ по запросу "${userQuery}":**\n\n` +
+        `В Minecraft успешное решение этой задачи строится на правильной экипировке, контроле высоты Y и запасе ключевых ресурсов.\n\n` +
+        `• **Совет**: Всегда носите с собой ведро воды (MLG), щит и еду с высоким насыщением.\n` +
+        `• **Координаты**: Нажмите F3 для проверки биома и уровня освещения.\n\n` +
+        `Напишите, если вам нужен точный рецепт крафта или команда!`;
     } else {
-      return {
-        text: `🤖 I analyzed "${userQuery}". You can ask me any question about Minecraft crafting recipes, mob stats, Y-level ore depths, or speedrun tricks. Try asking: *"Best level for diamonds"*, *"How to defeat the dragon with beds"*, or *"How to brew fire resistance"*!`,
-      };
+      dynamicText =
+        `💡 **Insight regarding "${userQuery}":**\n\n` +
+        `In Minecraft survival and mechanics, mastering this comes down to proper equipment, altitude awareness (Y-level via F3), and resource efficiency.\n\n` +
+        `• **Pro-Tip**: Always carry a water bucket, a sturdy shield, and high-saturation food.\n` +
+        `• **Coords**: Check F3 for light levels and chunk borders.\n\n` +
+        `Feel free to ask for a specific crafting recipe, seed coordinate, or command!`;
     }
+
+    // Dynamic rotation of format styles for variety
+    const stylesPool: MessageFormatStyle[] = ["tactical", "blueprint", "tips", "standard"];
+    const chosenStyle = stylesPool[Math.floor(Math.random() * stylesPool.length)];
+
+    return {
+      id: `ai_${Date.now()}`,
+      sender: "ai",
+      formatStyle: chosenStyle,
+      badge: "MINECRAFT ENSIKLOPEDIYASI",
+      text: dynamicText,
+      time: nowTime,
+    };
   };
 
   const handleSend = () => {
     if (!input.trim() || isTyping) return;
 
     const userText = input.trim();
-    setInput("");
-
-    // Add user message
     const userMsg: ChatMessage = {
       id: `u_${Date.now()}`,
       sender: "user",
@@ -252,22 +765,16 @@ export default function AIAssistant() {
       time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
     };
 
+    setInput("");
     setMessages((prev) => [...prev, userMsg]);
     setIsTyping(true);
 
     // Simulate smart thinking delay
     setTimeout(() => {
-      const resp = generateAIResponse(userText);
-      const aiMsg: ChatMessage = {
-        id: `ai_${Date.now()}`,
-        sender: "ai",
-        text: resp.text,
-        time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-        relatedItems: resp.relatedItems,
-      };
-      setMessages((prev) => [...prev, aiMsg]);
+      const aiResponse = generateAIResponse(userText);
+      setMessages((prev) => [...prev, aiResponse]);
       setIsTyping(false);
-    }, 600);
+    }, 500);
   };
 
   const resetChat = () => {
@@ -284,7 +791,7 @@ export default function AIAssistant() {
 
   return (
     <>
-      {/* ── 1. EXACT FLOATING TRIGGER BUTTON (MATCHING USER'S SCREENSHOT) ── */}
+      {/* ── 1. EXACT FLOATING TRIGGER BUTTON (WITH HIGH-DETAIL CELESTIAL PLANET ICON) ── */}
       {!isOpen && (
         <div className="fixed bottom-6 right-6 z-50 group flex items-center gap-3">
           {/* Glowing Animated Tooltip Pill */}
@@ -295,25 +802,24 @@ export default function AIAssistant() {
             </span>
           </div>
 
-          {/* Circular Button matching user's image: cyan border ring + cyan-purple gradient inner + magic wand */}
+          {/* Circular Button: Glowing Cyan ring + Satellite dot + Celestial Ringed Planet */}
           <button
             type="button"
             onClick={() => {
               setIsOpen(true);
               setIsMinimized(false);
             }}
-            className="relative w-14 h-14 rounded-full p-1 bg-transparent border-2 border-cyan-400 hover:border-cyan-300 shadow-[0_0_25px_rgba(6,182,212,0.65)] hover:shadow-[0_0_35px_rgba(168,85,247,0.8)] transition-all duration-300 cursor-pointer flex items-center justify-center group-hover:scale-110 active:scale-95"
+            className="relative w-14 h-14 rounded-full p-1 bg-[#0b1026] border-2 border-cyan-400 hover:border-cyan-300 shadow-[0_0_25px_rgba(6,182,212,0.65)] hover:shadow-[0_0_35px_rgba(168,85,247,0.85)] transition-all duration-300 cursor-pointer flex items-center justify-center group-hover:scale-110 active:scale-95"
             title={language === "uz" ? "Minecraft AI Yordamchisini ochish" : "Open Minecraft AI Assistant"}
           >
             {/* Satellite pulsing dot on the orbital outer ring */}
-            <div className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-cyan-300 border-2 border-[#080d1e] animate-pulse shadow-[0_0_8px_rgba(6,182,212,1)]" />
+            <div className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-cyan-300 border-2 border-[#080d1e] animate-pulse shadow-[0_0_10px_rgba(6,182,212,1)]" />
 
-            {/* Inner Vibrant Gradient Circle: Cyan to Violet */}
-            <div className="w-full h-full rounded-full bg-gradient-to-br from-cyan-400 via-sky-500 to-purple-600 flex items-center justify-center shadow-inner">
-              {/* Magic Wand icon with sparkles angled at 45° matching image */}
-              <Wand2
-                size={22}
-                className="text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.4)] transform rotate-12 group-hover:rotate-45 transition-transform"
+            {/* Inner Celestial Orb Icon */}
+            <div className="w-full h-full rounded-full bg-gradient-to-br from-[#0c1a3b] via-[#161f4d] to-[#2e1065] flex items-center justify-center overflow-hidden">
+              <CelestialOrbIcon
+                size={38}
+                className="transform group-hover:rotate-12 transition-transform duration-500"
               />
             </div>
           </button>
@@ -323,16 +829,16 @@ export default function AIAssistant() {
       {/* ── 2. EXPANDED AI CHAT WINDOW ── */}
       {isOpen && (
         <div
-          className={`fixed bottom-6 right-6 z-50 w-[92vw] sm:w-[420px] bg-[#0c142c]/95 border border-cyan-500/40 rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.9)] backdrop-blur-2xl flex flex-col overflow-hidden text-slate-100 transition-all duration-200 animate-in fade-in zoom-in-95 ${
-            isMinimized ? "h-16" : "h-[580px] max-h-[85vh]"
+          className={`fixed bottom-6 right-6 z-50 w-[92vw] sm:w-[440px] bg-[#090e24]/95 border border-cyan-500/40 rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.95)] backdrop-blur-2xl flex flex-col overflow-hidden text-slate-100 transition-all duration-200 animate-in fade-in zoom-in-95 ${
+            isMinimized ? "h-16" : "h-[600px] max-h-[86vh]"
           }`}
         >
           {/* Header */}
           <div className="px-4 py-3 bg-slate-950/90 border-b border-cyan-500/25 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              {/* Mini version of the wand icon */}
-              <div className="w-9 h-9 rounded-full border-2 border-cyan-400/80 p-0.5 bg-gradient-to-br from-cyan-400 to-purple-600 flex items-center justify-center shadow-[0_0_12px_rgba(6,182,212,0.5)]">
-                <Wand2 size={16} className="text-white transform rotate-12" />
+              {/* Mini Celestial Orb Icon in Header */}
+              <div className="w-10 h-10 rounded-full border-2 border-cyan-400/80 p-0.5 bg-gradient-to-br from-[#0c1a3b] to-[#2e1065] flex items-center justify-center shadow-[0_0_14px_rgba(6,182,212,0.6)] flex-shrink-0">
+                <CelestialOrbIcon size={28} />
               </div>
               <div>
                 <div className="text-xs font-black text-white flex items-center gap-2">
@@ -349,7 +855,7 @@ export default function AIAssistant() {
                 </div>
                 <div className="text-[10px] text-cyan-300 font-mono flex items-center gap-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping" />
-                  <span>MinecraftWiki.uz AI Engine</span>
+                  <span>Minecraft Wiki AI Knowledge Engine</span>
                 </div>
               </div>
             </div>
@@ -387,19 +893,86 @@ export default function AIAssistant() {
               <div className="flex-1 overflow-y-auto p-4 space-y-3.5 scrollbar-thin scrollbar-thumb-cyan-500/20">
                 {messages.map((m) => {
                   const isUser = m.sender === "user";
+                  const style = m.formatStyle || "standard";
+
+                  // Dynamic Card Styles for breaking monochromatic feel
+                  let cardBg = "bg-slate-900/90 border-cyan-500/30 text-slate-100";
+                  let badgeBadge = "bg-cyan-500/20 text-cyan-300 border-cyan-500/30";
+
+                  if (isUser) {
+                    cardBg = "bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-[0_0_15px_rgba(6,182,212,0.3)]";
+                  } else if (style === "forbidden") {
+                    cardBg = "bg-rose-950/70 border-rose-500/50 text-rose-100 shadow-[0_0_20px_rgba(244,63,94,0.25)]";
+                    badgeBadge = "bg-rose-500/25 text-rose-300 border-rose-400/40";
+                  } else if (style === "tactical") {
+                    cardBg = "bg-[#0b162e]/90 border-emerald-500/40 text-emerald-50 shadow-[0_0_18px_rgba(16,185,129,0.15)]";
+                    badgeBadge = "bg-emerald-500/20 text-emerald-300 border-emerald-500/30";
+                  } else if (style === "blueprint") {
+                    cardBg = "bg-[#18112e]/90 border-purple-500/40 text-purple-50 shadow-[0_0_18px_rgba(168,85,247,0.15)]";
+                    badgeBadge = "bg-purple-500/20 text-purple-300 border-purple-500/30";
+                  } else if (style === "terminal") {
+                    cardBg = "bg-[#050b14]/95 border-cyan-400/50 text-cyan-50 font-mono shadow-[0_0_20px_rgba(6,182,212,0.2)]";
+                    badgeBadge = "bg-cyan-500/20 text-cyan-300 border-cyan-500/30";
+                  } else if (style === "tips") {
+                    cardBg = "bg-[#1f1708]/90 border-amber-500/40 text-amber-50 shadow-[0_0_18px_rgba(245,158,11,0.15)]";
+                    badgeBadge = "bg-amber-500/20 text-amber-300 border-amber-500/30";
+                  }
+
                   return (
                     <div
                       key={m.id}
                       className={`flex flex-col ${isUser ? "items-end" : "items-start"} space-y-1`}
                     >
                       <div
-                        className={`max-w-[85%] p-3.5 rounded-2xl text-xs sm:text-[13px] leading-relaxed ${
-                          isUser
-                            ? "bg-gradient-to-r from-cyan-600 to-blue-600 text-white rounded-br-sm shadow-[0_0_15px_rgba(6,182,212,0.3)]"
-                            : "bg-slate-900/90 border border-cyan-500/30 text-slate-100 rounded-bl-sm shadow-md"
+                        className={`max-w-[88%] p-3.5 rounded-2xl text-xs sm:text-[13px] leading-relaxed border ${cardBg} ${
+                          isUser ? "rounded-br-sm" : "rounded-bl-sm"
                         }`}
                       >
+                        {/* Dynamic Badge Header for AI Responses */}
+                        {!isUser && m.badge && (
+                          <div className="flex items-center gap-1.5 mb-2 pb-1.5 border-b border-white/10">
+                            {style === "forbidden" ? (
+                              <ShieldAlert size={13} className="text-rose-400" />
+                            ) : style === "terminal" ? (
+                              <Terminal size={13} className="text-cyan-400" />
+                            ) : style === "tactical" ? (
+                              <Compass size={13} className="text-emerald-400" />
+                            ) : (
+                              <Sparkles size={13} className="text-purple-400" />
+                            )}
+                            <span className={`text-[9px] font-mono font-black uppercase px-1.5 py-0.5 rounded border ${badgeBadge}`}>
+                              {m.badge}
+                            </span>
+                          </div>
+                        )}
+
                         <div className="whitespace-pre-line">{m.text}</div>
+
+                        {/* Interactive Command Copy Box */}
+                        {m.commandSnippet && (
+                          <div className="mt-2.5 p-2 rounded-xl bg-black/60 border border-cyan-500/30 flex items-center justify-between gap-2">
+                            <code className="text-[11px] font-mono text-cyan-300 select-all truncate">
+                              {m.commandSnippet}
+                            </code>
+                            <button
+                              type="button"
+                              onClick={() => copyToClipboard(m.commandSnippet!)}
+                              className="px-2 py-1 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/40 text-cyan-200 text-[10px] font-mono flex items-center gap-1 transition-all flex-shrink-0 cursor-pointer"
+                            >
+                              {copiedCode === m.commandSnippet ? (
+                                <>
+                                  <Check size={11} className="text-emerald-400" />
+                                  <span>NUSXALANDI</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Copy size={11} />
+                                  <span>NUSXA</span>
+                                </>
+                              )}
+                            </button>
+                          </div>
+                        )}
 
                         {/* Related Items Pills */}
                         {m.relatedItems && m.relatedItems.length > 0 && (
@@ -414,8 +987,7 @@ export default function AIAssistant() {
                                   alt={item.name}
                                   className="w-4 h-4 object-contain [image-rendering:pixelated]"
                                   onError={(e) => {
-                                    (e.target as HTMLImageElement).src =
-                                      "https://raw.githubusercontent.com/misode/mcmeta/assets/assets/minecraft/textures/item/diamond.png";
+                                    (e.target as HTMLImageElement).src = "/icons/raw_icon.png";
                                   }}
                                 />
                                 <span>{item.name}</span>
@@ -434,11 +1006,11 @@ export default function AIAssistant() {
 
                 {/* Typing Indicator */}
                 {isTyping && (
-                  <div className="flex items-center gap-2 text-cyan-400 text-xs font-mono p-2 bg-slate-900/80 rounded-2xl border border-cyan-500/20 max-w-[120px]">
+                  <div className="flex items-center gap-2 text-cyan-400 text-xs font-mono p-2 bg-slate-900/80 rounded-2xl border border-cyan-500/20 max-w-[130px]">
                     <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-bounce" />
                     <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-bounce [animation-delay:0.2s]" />
                     <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-bounce [animation-delay:0.4s]" />
-                    <span>AI o&apos;ylamoqda</span>
+                    <span>AI tahlil qilmoqda</span>
                   </div>
                 )}
 
@@ -469,10 +1041,10 @@ export default function AIAssistant() {
                   onKeyDown={handleKeyDown}
                   placeholder={
                     language === "uz"
-                      ? "Minecraft haqida xohlagan narsangizni so'rang..."
+                      ? "Minecraft haqida har qanday savolni bering..."
                       : language === "ru"
-                      ? "Спросите что угодно о Майнкрафте..."
-                      : "Ask anything about Minecraft..."
+                      ? "Задайте любой вопрос по Майнкрафту..."
+                      : "Ask any question about Minecraft..."
                   }
                   className="flex-1 bg-slate-900/90 border border-cyan-500/30 focus:border-cyan-400 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-cyan-400 transition-all"
                 />

@@ -62092,7 +62092,7 @@
   {
     "id": "red_bed",
     "name": "Red Bed",
-    "texture": "https://raw.githubusercontent.com/misode/mcmeta/assets/assets/minecraft/textures/block/stone.png",
+    "texture": "/icons/red_bed.png",
     "category": "blocks",
     "rarity": "common",
     "isCraftable": true,

@@ -31,7 +31,6 @@ import VersionSelector from "@/components/VersionSelector";
 import SafeItemImage from "@/components/SafeItemImage";
 import CosmicBackground from "@/components/CosmicBackground";
 import ProgressionGuide from "@/components/ProgressionGuide";
-import ServerAddressBanner from "@/components/ServerAddressBanner";
 import { useLanguage } from "@/context/LanguageContext";
 import { useVersion } from "@/context/VersionContext";
 
@@ -144,11 +143,8 @@ export default function HomePage() {
               />
             </div>
 
-            {/* Right: Server IP, AI Assistant, Progression Walkthrough, Version, Wiki, Lang, Telegram */}
+            {/* Right: AI Assistant, Progression Walkthrough, Version, Wiki, Lang, Telegram */}
             <div className="flex items-center gap-2 sm:gap-2.5 flex-wrap justify-center sm:justify-end">
-              {/* 24/7 Server IP Badge with 1-click copy */}
-              <ServerAddressBanner variant="compact" />
-
               {/* Minecraft AI Assistant Launch Button */}
               <button
                 onClick={() => {
@@ -374,9 +370,6 @@ export default function HomePage() {
                 ))}
               </div>
             </div>
-
-            {/* ── 24/7 OFFICIAL SERVER IP BANNER: MinecraftWiki.uz ── */}
-            <ServerAddressBanner variant="full" />
 
             {/* ── GRAND FEATURE CARD: BEAT MINECRAFT PROGRESSION GUIDE ── */}
             <div className="max-w-5xl mx-auto w-full">

@@ -125,7 +125,7 @@ export const PROGRESSION_STAGES: ProgressionStage[] = [
       },
       {
         name: "Red Bed",
-        texture: "https://raw.githubusercontent.com/misode/mcmeta/assets/assets/minecraft/textures/item/red_bed.png",
+        texture: "/icons/red_bed.png",
         purposeUz: "Kechani o'tkazib yuborish",
         purposeRu: "Пропуск ночи и точка спавна",
         purposeEn: "Skip night & set spawn",
@@ -202,7 +202,7 @@ export const PROGRESSION_STAGES: ProgressionStage[] = [
     recommendedGear: [
       {
         name: "Shield",
-        texture: "https://raw.githubusercontent.com/misode/mcmeta/assets/assets/minecraft/textures/item/shield.png",
+        texture: "/icons/shield.png",
         purposeUz: "Kríper va skelet o'qlarini to'sish",
         purposeRu: "Защита от взрывов и стрел",
         purposeEn: "Negates creeper & arrow hits",
@@ -293,7 +293,7 @@ export const PROGRESSION_STAGES: ProgressionStage[] = [
       },
       {
         name: "Enchanting Table",
-        texture: "https://raw.githubusercontent.com/misode/mcmeta/assets/assets/minecraft/textures/item/enchanting_table.png",
+        texture: "/icons/enchanting_table.png",
         purposeUz: "Qurol va sovutlarni kuchaytirish",
         purposeRu: "Зачарование снаряжения",
         purposeEn: "Powering up combat gear",
@@ -370,7 +370,7 @@ export const PROGRESSION_STAGES: ProgressionStage[] = [
     recommendedGear: [
       {
         name: "Eye of Ender",
-        texture: "https://raw.githubusercontent.com/misode/mcmeta/assets/assets/minecraft/textures/item/eye_of_ender.png",
+        texture: "https://raw.githubusercontent.com/misode/mcmeta/assets/assets/minecraft/textures/item/ender_eye.png",
         purposeUz: "Stronghold qidirish va portalni ochish",
         purposeRu: "Поиск крепости и активация портала",
         purposeEn: "Locating Stronghold & opening End Portal",
@@ -545,7 +545,7 @@ export const PROGRESSION_STAGES: ProgressionStage[] = [
       },
       {
         name: "Red Bed",
-        texture: "https://raw.githubusercontent.com/misode/mcmeta/assets/assets/minecraft/textures/item/red_bed.png",
+        texture: "/icons/red_bed.png",
         purposeUz: "Ajdahoga qarshi portlash quroli (Bed Strat)",
         purposeRu: "Оружие массового урона по дракону",
         purposeEn: "Devastating one-cycle detonation",
@@ -636,7 +636,7 @@ export const PROGRESSION_STAGES: ProgressionStage[] = [
       },
       {
         name: "Beacon",
-        texture: "https://raw.githubusercontent.com/misode/mcmeta/assets/assets/minecraft/textures/item/beacon.png",
+        texture: "/icons/beacon.png",
         purposeUz: "Tezkor qazish (Haste II) va kuch",
         purposeRu: "Эффекты Спешки II и регенерации на базе",
         purposeEn: "Haste II instant mining & base buff",
@@ -1004,8 +1004,7 @@ export default function ProgressionGuide({ isOpen, onClose }: ProgressionGuidePr
                         className="w-full h-full object-contain [image-rendering:pixelated]"
                         loading="lazy"
                         onError={(e) => {
-                          (e.target as HTMLImageElement).src =
-                            "https://raw.githubusercontent.com/misode/mcmeta/assets/assets/minecraft/textures/item/diamond.png";
+                          (e.target as HTMLImageElement).src = "/icons/raw_icon.png";
                         }}
                       />
                     </div>
