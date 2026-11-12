@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { createPortal } from "react-dom";
 import {
   ChevronDown,
   Check,
@@ -10,7 +9,6 @@ import {
   Layers,
   Search,
   X,
-  Sparkles,
   Info,
 } from "lucide-react";
 import { useVersion } from "@/context/VersionContext";
@@ -32,33 +30,35 @@ export default function VersionSelector() {
   const [isOpen, setIsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<EditionType>(selectedEdition);
   const [searchQuery, setSearchQuery] = useState("");
-  const [mounted, setMounted] = useState(false);
-
-  // Client-side mounted flag for safe React Portal
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Sync active tab whenever selectedEdition changes
   useEffect(() => {
     setActiveTab(selectedEdition);
   }, [selectedEdition]);
 
-  // Close on ESC and lock background scroll
+  // Close when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    }
+    if (isOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isOpen]);
+
+  // Close on ESC key
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key === "Escape") setIsOpen(false);
     }
     if (isOpen) {
       window.addEventListener("keydown", handleKeyDown);
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
     }
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-      document.body.style.overflow = "";
-    };
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isOpen]);
 
   const getVersionTitle = (v: VersionInfo) => {
@@ -74,7 +74,7 @@ export default function VersionSelector() {
   };
 
   const getEditionShort = (id: EditionType) => {
-    if (id === "java") return "Java (PC)";
+    if (id === "java") return "Java";
     if (id === "bedrock") return "Bedrock";
     if (id === "mcpe") return language === "uz" ? "Telefon" : language === "ru" ? "MCPE" : "Mobile";
     return language === "uz" ? "Klassik" : language === "ru" ? "Классика" : "Classic";
@@ -104,11 +104,11 @@ export default function VersionSelector() {
   });
 
   return (
-    <>
+    <div className="relative inline-block text-left" ref={dropdownRef}>
       {/* ── 1. NAVBAR TRIGGER BUTTON ── */}
       <button
         type="button"
-        onClick={() => setIsOpen(true)}
+        onClick={() => setIsOpen(!isOpen)}
         className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#090f1f] hover:bg-[#121c38] border border-cyan-400/50 hover:border-cyan-300 text-slate-200 hover:text-white transition-all shadow-[0_0_15px_rgba(6,182,212,0.25)] hover:shadow-[0_0_20px_rgba(6,182,212,0.4)] cursor-pointer text-xs font-bold"
         title={t("versionSelector")}
       >
@@ -123,206 +123,162 @@ export default function VersionSelector() {
         />
       </button>
 
-      {/* ── 2. MODAL RENDERED VIA PORTAL TO BODY (NEVER CLIPPED BY NAVBAR / HEADER) ── */}
-      {isOpen && mounted && typeof document !== "undefined" && createPortal(
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
-          {/* Dimmed Dark Backdrop: dims and blurs background hero so nothing clashes */}
-          <div
-            className="fixed inset-0 bg-black/85 backdrop-blur-md transition-opacity"
-            onClick={() => setIsOpen(false)}
-          />
+      {/* ── 2. MOTION BLUR BACKDROP OVERLAY (ORQA FONNI XIRALASHTIRISH) ── */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-30 transition-opacity duration-200"
+          onClick={() => setIsOpen(false)}
+        />
+      )}
 
-          {/* Solid Opaque Modal Container (Zero Transparency / Zero Bleed-Through) */}
-          <div className="relative w-full max-w-2xl bg-[#0b1122] border-2 border-cyan-500/60 rounded-3xl shadow-[0_25px_80px_rgba(0,0,0,0.98)] overflow-hidden z-10 text-slate-100 flex flex-col max-h-[90vh] animate-in fade-in zoom-in-95 duration-200">
-            {/* Header */}
-            <div className="p-4 sm:p-5 bg-[#070b16] border-b border-cyan-500/30 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-cyan-500/20 border border-cyan-400/50 flex items-center justify-center text-cyan-300 shadow-[0_0_15px_rgba(6,182,212,0.3)]">
-                  <Box size={20} />
-                </div>
-                <div>
-                  <h3 className="text-sm sm:text-base font-black text-white tracking-wide flex items-center gap-2">
-                    <span>
-                      {language === "uz"
-                        ? "MINECRAFT NASHR VA VERSIYA TANLASH"
-                        : language === "ru"
-                        ? "ВЫБОР ИЗДАНИЯ И ВЕРСИИ MINECRAFT"
-                        : "SELECT MINECRAFT EDITION & VERSION"}
-                    </span>
-                  </h3>
-                  <p className="text-[11px] text-cyan-400 font-mono mt-0.5">
-                    {language === "uz"
-                      ? "Har bir versiya uchun unikal retseptlar, buyumlar va mexanikalar"
-                      : language === "ru"
-                      ? "Уникальные рецепты, предметы и механики для выбранной версии"
-                      : "Unique crafting recipes, items and mechanics for the chosen version"}
-                  </p>
-                </div>
-              </div>
-
-              {/* Close Button */}
+      {/* ── 3. NATURAL DROPDOWN MENU DIRECTLY UNDER TRIGGER BUTTON ── */}
+      {isOpen && (
+        <div className="absolute right-0 top-full mt-2 w-80 sm:w-96 rounded-2xl bg-[#0a1022] border-2 border-cyan-500/60 shadow-[0_20px_70px_rgba(0,0,0,0.98)] z-40 overflow-hidden text-left animate-in fade-in zoom-in-95 duration-150">
+          {/* Header with Edition Switcher Tabs */}
+          <div className="p-3 bg-[#070b18] border-b border-cyan-500/30 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-extrabold uppercase tracking-wider text-cyan-400 flex items-center gap-1.5 font-mono">
+                <Box size={13} className="text-cyan-400" />
+                {language === "uz"
+                  ? "NASHR VA VERSIYA TANLASH"
+                  : language === "ru"
+                  ? "ВЫБОР ИЗДАНИЯ И ВЕРСИИ"
+                  : "SELECT EDITION & VERSION"}
+              </span>
               <button
                 type="button"
                 onClick={() => setIsOpen(false)}
-                className="w-9 h-9 rounded-xl bg-white/5 hover:bg-rose-500/20 text-slate-400 hover:text-rose-300 border border-white/10 hover:border-rose-500/30 flex items-center justify-center transition-all cursor-pointer flex-shrink-0"
-                title="Yopish (ESC)"
+                className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-white/10 transition-colors"
+                title="Yopish"
               >
-                <X size={18} />
+                <X size={14} />
               </button>
             </div>
 
-            {/* Edition Selector Tabs: Java | Bedrock | Telefon | Klassik */}
-            <div className="p-3 sm:p-4 bg-[#090e1d] border-b border-white/10 space-y-3">
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                {supportedEditions.map((ed) => {
-                  const isActive = ed.id === activeTab;
-                  return (
-                    <button
-                      key={ed.id}
-                      type="button"
-                      onClick={() => {
-                        setActiveTab(ed.id);
-                        setEdition(ed.id);
-                      }}
-                      className={`flex items-center gap-2.5 p-2.5 rounded-2xl text-xs font-bold transition-all cursor-pointer border ${
-                        isActive
-                          ? "bg-gradient-to-r from-cyan-600 to-blue-600 text-white border-cyan-400 shadow-[0_0_20px_rgba(6,182,212,0.4)]"
-                          : "bg-[#0c1429] text-slate-300 hover:text-white hover:bg-[#121c3b] border-white/10"
-                      }`}
-                    >
-                      <span className="text-xl">{ed.icon}</span>
-                      <div className="text-left min-w-0">
-                        <div className="font-extrabold truncate leading-tight">
-                          {getEditionShort(ed.id)}
-                        </div>
-                        <div className="text-[10px] text-cyan-200/80 font-mono font-normal">
-                          {ed.badge}
-                        </div>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* Edition description & Quick Search Bar */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pt-1">
-                <p className="text-xs text-slate-300 italic flex items-center gap-1.5">
-                  <Info size={14} className="text-cyan-400 flex-shrink-0" />
-                  <span>
-                    {language === "uz"
-                      ? currentEditionTab.descriptionUz
-                      : language === "ru"
-                      ? currentEditionTab.descriptionRu
-                      : currentEditionTab.descriptionEn}
-                  </span>
-                </p>
-
-                {/* Filter Search Input */}
-                <div className="relative flex-shrink-0 sm:w-48">
-                  <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder={language === "uz" ? "Versiya qidirish..." : "Поиск версии..."}
-                    className="w-full pl-8 pr-3 py-1.5 bg-[#060a14] border border-cyan-500/30 focus:border-cyan-400 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none"
-                  />
-                </div>
-              </div>
+            {/* Edition Tabs: Java | Bedrock | Telefon | Klassik */}
+            <div className="grid grid-cols-4 gap-1 p-1 bg-[#050812] rounded-xl border border-white/5">
+              {supportedEditions.map((ed) => {
+                const isActive = ed.id === activeTab;
+                return (
+                  <button
+                    key={ed.id}
+                    type="button"
+                    onClick={() => {
+                      setActiveTab(ed.id);
+                      setEdition(ed.id);
+                    }}
+                    className={`flex flex-col items-center justify-center py-1.5 px-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
+                      isActive
+                        ? "bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-[0_0_12px_rgba(6,182,212,0.4)] border border-cyan-400/50"
+                        : "text-slate-400 hover:text-slate-200 hover:bg-white/5"
+                    }`}
+                  >
+                    <span className="text-sm mb-0.5">{ed.icon}</span>
+                    <span className="truncate w-full text-center leading-tight">
+                      {getEditionShort(ed.id)}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
 
-            {/* Version List (100% Solid Opaque Background, High Contrast) */}
-            <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-2 bg-[#0b1122]">
-              {filteredVersions.length === 0 ? (
-                <div className="py-12 text-center text-slate-400 text-xs">
-                  {language === "uz"
-                    ? "Mos keluvchi versiya topilmadi"
-                    : "Подходящая версия не найдена"}
-                </div>
-              ) : (
-                filteredVersions.map((v) => {
-                  const isSelected = v.id === selectedVersion;
-                  return (
-                    <button
-                      key={v.id}
-                      type="button"
-                      onClick={() => {
-                        setVersion(v.id);
-                        setIsOpen(false);
-                      }}
-                      className={`w-full flex items-center justify-between p-3.5 rounded-2xl text-left transition-all cursor-pointer border ${
-                        isSelected
-                          ? "bg-gradient-to-r from-cyan-950/90 to-[#0e2242] border-cyan-400 text-white shadow-[0_0_25px_rgba(6,182,212,0.3)] ring-1 ring-cyan-400"
-                          : "bg-[#0e162c] hover:bg-[#14203f] border-white/10 hover:border-cyan-500/40 text-slate-200"
-                      }`}
-                    >
-                      <div className="flex-1 min-w-0 pr-3">
-                        <div className="flex items-center gap-2.5 mb-1 flex-wrap">
-                          <span
-                            className={`font-mono text-sm font-black ${
-                              isSelected ? "text-cyan-300" : "text-white"
-                            }`}
-                          >
-                            {v.label}
-                          </span>
-                          {v.highlightBadge && (
-                            <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-md bg-emerald-500/25 text-emerald-300 border border-emerald-500/40 font-mono">
-                              {v.highlightBadge}
-                            </span>
-                          )}
-                          <span className="text-[11px] text-slate-400 flex items-center gap-1 font-mono">
-                            <Calendar size={12} className="text-slate-500" />
-                            {v.year}
-                          </span>
-                        </div>
-                        <div className="text-xs font-bold text-slate-200 truncate">
-                          {getVersionTitle(v)}
-                        </div>
-                        {v.descriptionUz && (
-                          <div className="text-[11px] text-slate-400 line-clamp-1 mt-0.5">
-                            {getVersionDesc(v)}
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
-                        <span className="text-[11px] font-mono px-2.5 py-1 rounded-full bg-[#070b16] text-cyan-300 border border-cyan-500/30 font-bold">
-                          {getItemsCountLabel(v.itemCount)}
-                        </span>
-                        {isSelected && (
-                          <div className="flex items-center gap-1 text-[11px] font-bold text-cyan-300">
-                            <Check size={14} className="stroke-[3] text-cyan-400" />
-                            <span>TANLANGAN</span>
-                          </div>
-                        )}
-                      </div>
-                    </button>
-                  );
-                })
-              )}
-            </div>
-
-            {/* Footer Summary */}
-            <div className="px-5 py-3 bg-[#070b16] border-t border-cyan-500/20 flex items-center justify-between text-xs text-slate-400">
-              <span className="flex items-center gap-1.5">
-                <Sparkles size={13} className="text-cyan-400" />
-                <span>
-                  {language === "uz"
-                    ? "Tanlangan versiya bo'yicha ma'lumotlar avtomatik yangilanadi"
-                    : language === "ru"
-                    ? "Данные обновляются автоматически для выбранной версии"
-                    : "Data automatically updates for selected version"}
-                </span>
-              </span>
-              <span className="font-mono text-cyan-300 font-extrabold">
-                {currentVersionInfo.itemCount}{" "}
-                {language === "uz" ? "ta buyum" : "items"}
-              </span>
+            {/* Quick Search Bar */}
+            <div className="relative pt-0.5">
+              <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder={language === "uz" ? "Versiya qidirish (masalan, 1.21)..." : "Поиск версии..."}
+                className="w-full pl-7 pr-3 py-1 bg-[#050812] border border-cyan-500/30 focus:border-cyan-400 rounded-lg text-xs text-white placeholder-slate-500 focus:outline-none"
+              />
             </div>
           </div>
-        </div>,
-        document.body
+
+          {/* List of Versions for Active Tab (100% Solid Opaque Background) */}
+          <div className="max-h-80 overflow-y-auto p-2 space-y-1.5 bg-[#0a1022] scrollbar-thin scrollbar-thumb-cyan-500/20">
+            {filteredVersions.length === 0 ? (
+              <div className="py-8 text-center text-slate-400 text-xs">
+                {language === "uz" ? "Mos versiya topilmadi" : "Версия не найдена"}
+              </div>
+            ) : (
+              filteredVersions.map((v) => {
+                const isSelected = v.id === selectedVersion;
+                return (
+                  <button
+                    key={v.id}
+                    type="button"
+                    onClick={() => {
+                      setVersion(v.id);
+                      setIsOpen(false);
+                    }}
+                    className={`w-full flex items-center justify-between p-2.5 rounded-xl text-left transition-all cursor-pointer border ${
+                      isSelected
+                        ? "bg-gradient-to-r from-cyan-950/90 to-[#0e2242] border-cyan-400 text-white shadow-[0_0_15px_rgba(6,182,212,0.3)] ring-1 ring-cyan-400"
+                        : "bg-[#0e162c] hover:bg-[#14203f] border-white/10 hover:border-cyan-500/40 text-slate-200"
+                    }`}
+                  >
+                    <div className="flex-1 min-w-0 pr-2">
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <span
+                          className={`font-mono text-xs font-bold ${
+                            isSelected ? "text-cyan-300" : "text-white"
+                          }`}
+                        >
+                          {v.label}
+                        </span>
+                        {v.highlightBadge && (
+                          <span className="text-[8px] font-black uppercase px-1.5 py-0.5 rounded-md bg-emerald-500/25 text-emerald-300 border border-emerald-500/40 font-mono">
+                            {v.highlightBadge}
+                          </span>
+                        )}
+                        <span className="text-[10px] text-slate-400 flex items-center gap-0.5 font-mono">
+                          <Calendar size={10} className="text-slate-500" />
+                          {v.year}
+                        </span>
+                      </div>
+                      <div className="text-[11px] font-medium text-slate-300 truncate">
+                        {getVersionTitle(v)}
+                      </div>
+                      {v.descriptionUz && (
+                        <div className="text-[10px] text-slate-400 line-clamp-1 mt-0.5">
+                          {getVersionDesc(v)}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-[#050812] text-cyan-300 border border-cyan-500/30 font-bold">
+                        {getItemsCountLabel(v.itemCount)}
+                      </span>
+                      {isSelected && (
+                        <div className="w-5 h-5 rounded-full bg-cyan-500/20 flex items-center justify-center text-cyan-400">
+                          <Check size={12} className="stroke-[3]" />
+                        </div>
+                      )}
+                    </div>
+                  </button>
+                );
+              })
+            )}
+          </div>
+
+          {/* Footer Info */}
+          <div className="px-3.5 py-2 bg-[#070b18] border-t border-cyan-500/20 flex items-center justify-between text-[11px] text-slate-400">
+            <span className="truncate">
+              {language === "uz"
+                ? "Dinamik retseptlar va buyumlar filtri"
+                : language === "ru"
+                ? "Фильтр предметов и рецептов"
+                : "Dynamic recipes & item filter"}
+            </span>
+            <span className="font-mono text-cyan-300 font-bold flex-shrink-0 ml-2">
+              {currentVersionInfo.itemCount}{" "}
+              {language === "uz" ? "buyum" : "items"}
+            </span>
+          </div>
+        </div>
       )}
-    </>
+    </div>
   );
 }
